@@ -155,7 +155,7 @@ while compt < nb_it:
 	print(comparer_eclairement(E_cp,E_appr))
 	Z_appr = Z_appr_n
 	V_appr = np.sum(Z_appr)
-	print(V,V_appr,np.abs(V-V_appr)/V)
+	print(V, V_appr, np.abs(V - V_appr) / V)
 
 t2 = clock()
 
