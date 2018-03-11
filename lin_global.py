@@ -10,7 +10,7 @@ from mpl_toolkits.mplot3d import Axes3D
 
 chdir('/home/rosaell/Documents/2017_2018/Stage/stageL3_photoclinometrie')
 
-from fonctions_utiles import *
+from libSFS import *
 
 t1 = clock()
 
