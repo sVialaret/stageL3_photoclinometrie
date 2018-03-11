@@ -14,8 +14,8 @@ from libSFS import *
 
 t1 = clock()
 
-nx = 64
-ny = 64
+nx = 128
+ny = 128
 N = nx * ny
 
 theta = np.pi / 5
@@ -36,7 +36,7 @@ X, Y = np.meshgrid(y, x)
 
 # Z,E,V = generer_surface(Nx=nx, Ny=ny, forme=('volcan',40,40,0.5,0.3,0.4), reg = 2, lV=(theta,phi),obV=(0,0))
 # Z,E,V = generer_surface(Nx=nx, Ny=ny, forme=('trap',80,80,1,0.5), reg=0, lV=(theta,phi),obV=(0,0))
-Z, E, V = generer_surface(Nx=nx, Ny=ny, forme=('cone', 20, 5), reg=0, lV=(theta, phi), obV=(0, 0))
+Z, E, V = generer_surface(Nx=nx, Ny=ny, forme=('cone', 40, 5), reg=0, lV=(theta, phi), obV=(0, 0))
 # Z,E,V = generer_surface(Nx=nx, Ny=ny, forme=('plateau',20,20,1), reg = 5, lV=(theta,phi),obV=(0,0))
 
 E_cp = E.copy()
@@ -134,9 +134,9 @@ while compt < nb_it:
 
 	Z_appr_vect = spsolve(M,F)
 
-	Z_appr_n = np.reshape(Z_appr_vect,(nx,ny))
+	Z_appr_n = np.reshape(Z_appr_vect, (nx, ny))
 
-	E_appr = eclairement(Z_appr_n,lV)
+	E_appr = eclairement(Z_appr_n, lV)
 
 	fig = plt.figure()
 	ax = fig.gca(projection='3d')
@@ -160,6 +160,6 @@ while compt < nb_it:
 t2 = clock()
 
 print("affichage ok")
-print(t2-t1)
+print(t2 - t1)
 
 plt.show()
