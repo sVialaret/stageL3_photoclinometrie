@@ -18,8 +18,8 @@ nx = 128
 ny = 128
 N = nx * ny
 
-theta = np.pi / 5
-phi = np.pi / 4
+theta = np.pi / 3
+phi = np.pi / 4 + np.pi
 alpha = np.sin(theta) * np.cos(phi)
 beta = np.sin(theta) * np.sin(phi)
 gamma = np.cos(theta)
@@ -36,7 +36,7 @@ X, Y = np.meshgrid(y, x)
 
 # Z,E,V = generer_surface(Nx=nx, Ny=ny, forme=('volcan',40,40,0.5,0.3,0.4), reg = 2, lV=(theta,phi),obV=(0,0))
 # Z,E,V = generer_surface(Nx=nx, Ny=ny, forme=('trap',80,80,1,0.5), reg=0, lV=(theta,phi),obV=(0,0))
-Z, E, V = generer_surface(Nx=nx, Ny=ny, forme=('cone', 40, 5), reg=0, lV=(theta, phi), obV=(0, 0))
+Z, E, V = generer_surface(Nx=nx, Ny=ny, forme=('cone', 40, 10), reg=0, lV=(theta, phi), obV=(0, 0))
 # Z,E,V = generer_surface(Nx=nx, Ny=ny, forme=('plateau',20,20,1), reg = 5, lV=(theta,phi),obV=(0,0))
 
 E_cp = E.copy()
@@ -52,6 +52,11 @@ M_ii = sp.lil_matrix((ny, ny))
 M_ii.setdiag(-2 * eps * (1 / dx ** 2 + 1 / dy ** 2) - alpha / dx - beta / dy)
 M_ii.setdiag(eps / (dx ** 2) + alpha / dx, 1)
 M_ii.setdiag(eps / (dx ** 2), -1)
+
+# M_ii.setdiag(-2 * eps * (1 / dx ** 2 + 1 / dy ** 2))
+# M_ii.setdiag(eps / (dx ** 2) + alpha / (2 * dx), 1)
+# M_ii.setdiag(eps / (dx ** 2) - alpha / (2 * dx), -1)
+
 M_ii[0, 0] = 1
 M_ii[-1, -1] = 1
 M_ii[0, 1] = 0
@@ -68,6 +73,7 @@ M_ij_lap = M_ij_lap.tocsr()
 
 M_ij_dy = sp.lil_matrix((ny, ny))
 M_ij_dy.setdiag(beta / dy)
+# M_ij_dy.setdiag(beta / (2 * dy))
 M_ij_dy[0, 0] = 0
 M_ij_dy[-1, -1] = 0
 M_ij_dy = M_ij_dy.tocsr()
@@ -97,7 +103,7 @@ K_id[0, 0] = 1
 K_id[-1, -1] = 1
 
 M = sp.kron(K_ii, M_ii) + sp.kron(K_ij_lap, M_ij_lap) + sp.kron(K_ij_dy, M_ij_dy) + sp.kron(K_id, sp.eye(ny))
-
+# M = sp.kron(K_ii, M_ii) + sp.kron(K_ij_lap, M_ij_lap) + sp.kron(K_ij_dy, M_ij_dy) - sp.kron(K_ij_dy.transpose(), M_ij_dy) + sp.kron(K_id, sp.eye(ny))
 
 t2 = clock()
 
@@ -106,14 +112,14 @@ print(t2 - t1)
 
 t1 = clock()
 
-nb_it = 5
+nb_it = 1
 
 compt = 0
 
 Z_appr = np.zeros((nx, ny))
 
-# plt.figure(-5)
-# plt.imshow(E_cp,cmap='gray')
+plt.figure(-5)
+plt.imshow(E_cp,cmap='gray')
 
 while compt < nb_it:
 
@@ -149,8 +155,8 @@ while compt < nb_it:
 	# ax.plot_surface(X,Y,Z_appr_n - Z_appr,rstride=2,cstride=2,linewidth=1)
 	# plt.title(10*compt +1)
 
-	# plt.figure(100*compt)
-	# plt.imshow(E_appr,cmap='gray')
+	plt.figure(100*compt)
+	plt.imshow(E_appr,cmap='gray')
 
 	print(comparer_eclairement(E_cp,E_appr))
 	Z_appr = Z_appr_n
