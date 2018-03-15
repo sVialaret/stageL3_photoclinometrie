@@ -12,43 +12,28 @@ chdir('/home/rosaell/Documents/2017_2018/Stage/stageL3_photoclinometrie')
 
 from libSFS import *
 
-t1 = clock()
-
 nx = 64
 ny = 64
 N = nx * ny
 
 theta = np.pi / 3
 phi = np.pi / 3
-alpha = np.sin(theta) * np.cos(phi)
-beta = np.sin(theta) * np.sin(phi)
-gamma = np.cos(theta)
-lV = np.array([alpha, beta, gamma])
+theta_obs = 0
+phi_obs = 0
+lV = direction_eclairement((theta, phi), (theta_obs, phi_obs))
+
+alpha, beta, gamma = lV
 
 eps = 0.1
 
 dx = 1
 dy = 1
 
+nb_it = 1
+
 x = np.linspace(-nx / 2, nx / 2 - 1, nx)
 y = np.linspace(-ny / 2, ny / 2 - 1, ny)
 X, Y = np.meshgrid(y, x)
-
-# Z,E,V = generer_surface(Nx=nx, Ny=ny, forme=('volcan',20,20,0.5,0.2,0.5), reg = 0, lV=(theta,phi),obV=(0,0))
-# Z,E,V = generer_surface(Nx=nx, Ny=ny, forme=('trap',80,80,1,0.5), reg=0, lV=(theta,phi),obV=(0,0))
-Z, E, V = generer_surface(Nx=nx, Ny=ny, forme=('cone', 20,1), reg=0, lV=(theta, phi), obV=(0, 0))
-# Z,E,V = generer_surface(Nx=nx, Ny=ny, forme=('plateau',20,20,1), reg = 0, lV=(theta,phi),obV=(0,0))
-
-E_cp = E.copy()
-
-t2 = clock()
-
-print("surface generee")
-print(t2 - t1)
-
-t1 = clock()
-
-# # resolution de l'equation sur le tore
 
 # gradient selon x
 
@@ -81,67 +66,66 @@ M_lap = M_dx.T.dot(M_dx) + M_dy.T.dot(M_dy)
 
 M = eps * M_lap + alpha * M_dx + beta * M_dy
 
+# remplissage de la derniere ligne
+
 M[-1, 0] = 1
 M[-1, -1] = -1
 
-t2 = clock()
-
 print("matrice formee")
-print(t2 - t1)
 
-t1 = clock()
+grad = lambda U : (M_dx.dot(U), M_dy.dot(U))
 
-nb_it = 3
+# Z,E,V = generer_surface(Nx=nx, Ny=ny, forme=('volcan',20,20,0.5,0.2,0.5), reg = 0, lV=(theta,phi),obV=(0,0))
+# Z,E,V = generer_surface(Nx=nx, Ny=ny, forme=('trap',80,80,1,0.5), reg=0, lV=(theta,phi),obV=(0,0))
+Z_mat = generer_surface(Nx=nx, Ny=ny, forme=('cone', 20, 1), reg=0)
+# Z,E,V = generer_surface(Nx=nx, Ny=ny, forme=('plateau',20,20,1), reg = 0, lV=(theta,phi),obV=(0,0))
+
+Z = np.reshape(Z_mat, N)
+
+Z = np.concatenate((Z, [0]))
+
+E = eclairement(Z, lV, grad)
+
+E_cp = E.copy()
+E_cp_mat = np.reshape(E_cp[:-1], (nx, ny))
+
+V = np.sum(Z[:-1])
+
+print("surface generee")
 
 compt = 0
 
-Z_appr = np.zeros((nx, ny))
+Z_appr = np.zeros(N + 1)
 
 plt.figure(-5)
-plt.imshow(E_cp, cmap='gray')
+plt.imshow(E_cp_mat, cmap='gray')
 
 while compt < nb_it:
 
 	compt += 1
 
-	Z_gradx, Z_grady = np.gradient(Z_appr)
+	Z_gradx, Z_grady = grad(Z_appr)
 	corr = np.sqrt(1 + Z_gradx**2 + Z_grady**2)
 	E = E_cp * corr - gamma
+	E[-1] = 0
 	    
-	F = np.reshape(E, N)
+	# F = np.reshape(E, N)
 
-	F = np.concatenate((F, [0]))
+	Z_appr = spsolve(M,E)
+	E_appr = eclairement(Z_appr, lV, grad)
+	Z_appr_mat = np.reshape(Z_appr[:-1], (nx, ny))
+	E_appr_mat = np.reshape(E_appr[:-1], (nx, ny))
 
-	Z_appr_vect = spsolve(M,F)
-
-	Z_appr_n = np.reshape(Z_appr_vect[:-1] - Z_appr_vect[-1], (nx, ny))
-
-	E_appr = eclairement(Z_appr_n, lV)
-
-	fig = plt.figure()
+	fig = plt.figure(10 * compt)
 	ax = fig.gca(projection='3d')
-	ax.plot_surface(X,Y,Z_appr_n,rstride=2,cstride=2,linewidth=1)
-	ax.plot_wireframe(X,Y,Z,rstride=2,cstride=2,linewidth=1,color='r')
-	plt.title(compt)
+	ax.plot_surface(X,Y,Z_appr_mat,rstride=2,cstride=2,linewidth=1)
+	ax.plot_wireframe(X,Y,Z_mat,rstride=2,cstride=2,linewidth=1,color='r')
 
-	# fig = plt.figure()
-	# ax = fig.gca(projection='3d')
-	# ax.plot_surface(X,Y,Z_appr_n - Z_appr,rstride=2,cstride=2,linewidth=1)
-	# plt.title(10*compt +1)
-	
-	E_appr = (E_appr - np.min(E_appr))/(np.max(E_appr)-np.min(E_appr))
+	plt.figure(10 * compt + 1)
+	plt.imshow(E_appr_mat, cmap='gray')
 
-	plt.figure(100 * compt)
-	plt.imshow(E_appr, cmap='gray')
-
-	print(comparer_eclairement(E_cp,E_appr))
-	Z_appr = Z_appr_n
-	V_appr = np.sum(Z_appr)
+	print(comparer_eclairement(E_cp[:-1],E_appr[:-1]))
+	V_appr = np.sum(Z_appr[:-1])
 	print(V, V_appr, np.abs(V - V_appr) / V)
-
-t2 = clock()
-
-print("affichage ok")
-print(t2 - t1)
 
 plt.show()

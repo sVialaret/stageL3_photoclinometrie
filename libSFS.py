@@ -1,153 +1,24 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-import pylab as plt
-import scipy.misc as imageio
 from scipy.signal import convolve2d
-from numpy.fft import fftshift,fft2,ifft2
 
-def build_centered_indices(M,N):
-    i = M//2 - (M//2 - np.arange(0,M)) % M  # (0, 1, ..., M/2, -M/2, ..., -1)
-    j = N//2 - (N//2 - np.arange(0,N)) % N  # (0, 1, ..., M/2, -M/2, ..., -1)
-    return np.meshgrid(i, j)
+def direction_eclairement(angLum, angObs):
 
-def gradient_tfd2(u): # 2D -> 2D
-    M,N = u.shape
-    U = fft2(u);
-    (ii, jj) = build_centered_indices(M,N)
-    dx = (2j * np.pi / M) * ii
-    dy = (2j * np.pi / N) * jj
-    dxU = dx * U
-    dyU = dy * U
-    dxu = np.real(ifft2(dxU))
-    dyu = np.real(ifft2(dyU))
-    return np.array([dxu, dyu])
+    thL, phiL = angLum
+    thO, phiO = angObs
+    lV = np.array([np.sin(thL)*np.cos(phiL),np.sin(thL)*np.sin(phiL), np.cos(thL)])
     
-def integr_x(u): # 2D -> 2D
-    u=np.array(u)
-    M,N = u.shape
-    U = fft2(u);
-    (ii, jj) = build_centered_indices(M,N)
-    dx = (2j * np.pi / M) * ii
-    dx[:,0]=1
-    dxU =  U / dx
-    dxu = np.real(ifft2(dxU))
-    return dxu
-    
-def integr_y(u): # 2D -> 2D
-    u=np.array(u)
-    M,N = u.shape
-    U = fft2(u);
-    (ii, jj) = build_centered_indices(M,N)
-    dy = (2j * np.pi / N) * jj
-    dy[0,:]=1
-    dyU = U / dy
-    dyu = np.real(ifft2(dyU))
-    return dyu
+    c = np.cross(angObs, (0, 0, 1))
+    lVapp = np.cos(thO)*lV + (1-np.cos(thO))*(np.dot(lV,c))*c + np.sin(thO)*(np.cross(c,lV))
 
-def inv_cl(u,alpha,beta,gamma):
-    u=np.array(u)
-    M,N = u.shape
-    U = fft2(u)
-    U[0,0]=U[0,0]-gamma
-    (ii, jj) = build_centered_indices(N,M)
-    D = (2*1j*np.pi)*((ii/N)*alpha + (jj/M)*beta)
-    D[0,0]=1
-    for h in range(N):
-        for k in range(N):
-            if D[h,k]==0:
-                D[h,k]=1
-    X = U/D
-    return np.real(ifft2(X))
-    
-def creer_cl(u,alpha,beta,gamma):
-    u=np.array(u)
-    M,N = u.shape
-    U = fft2(u)
-    U[0,0]=U[0,0]-gamma
-    (ii, jj) = build_centered_indices(N,M)
-    X = U*(2*1j*np.pi)*((ii/N)*alpha + (jj/M)*beta)
-    return np.real(ifft2(X))
-    
-def laplacien_per_dft2(u):
-    M,N = u.shape
-    U = fft2(u);
-    (ii, jj) = build_centered_indices(N,M)
-    dx = (2j * np.pi / N) * ii
-    dy = (2j * np.pi / M) * jj
-    dxU = dx**2 * U
-    dyU = dy**2 * U
-    Du = np.real(ifft2(dxU+dyU))
-    return Du
-    
-def laplacien_sym_dft2(u):
-    M,N = u.shape
-    x=miroir(u)
-    Dx=laplacien_per_dft2(x)
-    return Dx[0:M,0:N]
+    return lVapp
 
-def inv_cl2(u,alpha,beta,gamma,epsilon):
-    u=np.array(u)
-    M,N = u.shape
-    U = fft2(u)
-    print(np.absolute(U) < 10**-5)
-    print(U)
-    U[0,0]=U[0,0]-gamma
-    (ii, jj) = build_centered_indices(N,M)
-    D = (2*1j*np.pi)*((ii/N)*alpha + (jj/M)*beta) + epsilon*(-4*(np.pi)**2*((ii/N)**2+(jj/M)**2))
-    D[0,0]=1
-    for h in range(N):
-        for k in range(N):
-            if D[h,k]==0:
-                D[h,k]=1
-    X = U/D
-    
-    return np.real(ifft2(X))
 
-def inv_cl_real(u,alpha,beta,gamma):
-    u=np.array(u)
-    M,N = u.shape
-    U = fft2(u)
-    U[0,0]=U[0,0]-gamma
-    (ii, jj) = build_centered_indices(N,M)
-    D = (2*1j*np.pi)*((ii/N)*alpha + (jj/M)*beta)
-    D[0,0]=1
-    for h in range(N):
-        for k in range(N):
-            if D[h,k]==0:
-                D[h,k]=1
-    X = U/D
-    X=np.real(X)
-    return np.real(ifft2(X))
-    
-def inv_cl_imag(u,alpha,beta,gamma):
-    u=np.array(u)
-    M,N = u.shape
-    U = fft2(u)
-    U[0,0]=U[0,0]-gamma
-    (ii, jj) = build_centered_indices(N,M)
-    D = (2*1j*np.pi)*((ii/N)*alpha + (jj/M)*beta)
-    D[0,0]=1
-    for h in range(N):
-        for k in range(N):
-            if D[h,k]==0:
-                D[h,k]=1
-    X = U/D
-    X=1j*np.imag(X)
-    return np.real(ifft2(X))
-    
-def estimation_volume(I,z,alpha,beta,gamma):
-    V=-gamma*(alpha+beta)/(2*(alpha**2+beta**2))
-    L=laplacien_per_dft2(z)
-    for k in range(N):
-        for m in range(N):
-            V+=((alpha*(1-k/N)+beta*(1-m/N))*I[k,m]-(1-k/N)*(1-m/N)*L[k,m])/(alpha**2+beta**2)
-    return V
-
-def generer_surface(Nx = 64, Ny = 64, forme = ('plateau', 16, 16, 1), reg = 0, lV = (0,0), obV = (0,0)):
+def generer_surface(Nx = 64, Ny = 64, forme = ('plateau', 16, 16, 1), reg = 0):
     
     """
-        genere une surface centree du type specifie, renvoie le profil de hauteur, la carte d'intensite sour un eclairement d'angle ang_ecl, et le volume de l'objet
+        genere une surface centree du type specifie et en renvoie le profil de hauteur
         
         entree :
             Nx,Ny : dimension de l'image generee
@@ -158,13 +29,10 @@ def generer_surface(Nx = 64, Ny = 64, forme = ('plateau', 16, 16, 1), reg = 0, l
                 - ('volcan', sigx, sigy, H, p, k) : volcan de base d'ecart type sigx, sigy, de hauteur H, de profondeur p, de trou = base k-contractee
                 
             reg : sigma : faut-il regulariser la surface ? (convolution par une gaussienne centree d'ecart-type reg) si reg = 0 : pas de regularisation
-            lV : (theta,phi) : coordonnees spheriques d'un vecteur unitaire donnant la direction de la lumière
-            obV : (theta_o, phi_o) : coordonnees spheriques d'un vecteur unitaire donnant la direction de l'observateur
+
         
         sortie :
             Z : profil de hauteur
-            E : carte d'eclairement
-            V : volume du tas
     """
     
     # Generation de la surface
@@ -238,44 +106,39 @@ def generer_surface(Nx = 64, Ny = 64, forme = ('plateau', 16, 16, 1), reg = 0, l
     if reg != 0:
         G = 1/(2*np.pi*reg)**.5 * np.exp(-((X)**2 + (Y)**2)/(2*reg**2))
         Z = convolve2d(Z,G,'same')
-    
-    
-    # Generation de la carte d'eclairement
-    
-    th, ph = lV
-    thO, phO = obV
-    lV = np.array([np.sin(th)*np.cos(ph),np.sin(th)*np.sin(ph), np.cos(th)])
-    
-    c = np.cross(obV,(0,0,1))
-    lVapp = np.cos(thO)*lV + (1-np.cos(thO))*(np.dot(lV,c))*c + np.sin(thO)*(np.cross(c,lV))
-    
-    E = eclairement(Z,lVapp)
-    
-    # Calcul du volume
-    
-    V = np.sum(Z)
-    
-    return Z,E,V
+
+    return Z
 
 
 
-def eclairement(Z,lV):
-    gradZx,gradZy = np.gradient(Z)
-    E = (lV[2] + lV[0]*gradZx +lV[1]*gradZy)/(1+gradZx**2 + gradZy**2)
+def eclairement(Z, lV, grad):
+    """
+        renvoie la carte d'eclairement correspondant à la surface Z eclairee dans la direction lV, selon le gradient grad
+
+        entree :
+            Z : surface d'entree sous forme vectorielle (ie Z_{i,j} i < nx, j < ny --->  Z_j*nx + i, i < nx, j < ny)
+            lV : vecteur unitaire dont la direction est celle du rayon incident
+            grad : fonction calculant les composantes du gradient (sous forme vectorielle) de la matrice représentée par Z
+
+        sortie :
+            E : carte d'eclairement sous forme vectorielle
+    """
+
+    gradZx, gradZy = grad(Z)
+    E = (lV[2] + lV[0] * gradZx + lV[1] * gradZy) / (1 + gradZx ** 2 + gradZy ** 2)
     # E = (lV[2] + lV[0]*gradZx +lV[1]*gradZy)
     
     return E
 
 
-def comparer_eclairement(E1,E2):
-    Gx, Gy = np.gradient(E1-E2)
-    Gzx, Gzy = np.gradient(E1)
+def comparer_eclairement(E1, E2):
+    """
+        renvoie la difference en norme 1, en norme 2 et en norme uniforme entre E1 et E2, avec E1 comme reference
+    """
     N1ref = np.sum(np.abs(E1))
-    N2ref = np.sum(np.abs(E1**2))**.5
-    N1 = np.sum(np.abs(E1-E2))/N1ref
-    N2 = ((np.sum(np.abs((E1-E2))**2))**(1.0/2))/N2ref
-    sig2 = np.abs(N2**2 - N1**2)**.5
-    S = np.sum(np.abs(E1)) + np.sum(np.abs(Gzx)) + np.sum(np.abs(Gzy))
-    S1 = (np.sum(np.abs(E1-E2)) + np.sum(np.abs(Gx)) + np.sum(np.abs(Gy)))/S
-    
-    return N1,N2,sig2,S1
+    N2ref = np.sum(np.abs(E1 ** 2)) ** .5
+    N1 = np.sum(np.abs(E1 - E2)) / N1ref
+    N2 = ((np.sum(np.abs((E1 - E2)) ** 2)) ** (1.0 / 2)) / N2ref
+    N_uni = np.max(np.abs(E1 - E2)) / np.max(np.abs(E1))
+
+    return N1, N2, N_uni
