@@ -228,7 +228,7 @@ def generer_surface(Nx = 64, Ny = 64, forme = ('plateau', 16, 16, 1), reg = 0, l
         Z_trou[Nx/2-k*sigx+1:Nx/2+k*sigx-1,Ny/2 - k*sigy+1:Ny/2 + k*sigy-1] = p*np.exp(-(1/((k*sigx)**2-X[Nx/2-k*sigx+1:Nx/2+k*sigx-1,Ny/2 - k*sigy+1:Ny/2 + k*sigy-1]**2))-(1/((k*sigy)**2-Y[Nx/2-k*sigx+1:Nx/2+k*sigx-1,Ny/2 - k*sigy+1:Ny/2 + k*sigy-1]**2)))
         
         # Z_trou = p*np.exp(-(1/((k*sigx)**2-X**2))-(1/((k*sigy)**2-Y**2)))*Tk
-        Z = Z-Z_trou
+        Z = Z - Z_trou
         
         
         
