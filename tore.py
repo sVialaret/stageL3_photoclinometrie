@@ -1,15 +1,11 @@
 # -*- coding: utf-8 -*-
 
-from os import chdir
 import scipy.sparse as sp
 from scipy.sparse.linalg import spsolve
 from time import clock
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-
-chdir('/home/rosaell/Documents/2017_2018/Stage/stageL3_photoclinometrie')
-
 from libSFS import *
 
 nx = 64
@@ -118,13 +114,13 @@ while compt < nb_it:
 
 	fig = plt.figure(10 * compt)
 	ax = fig.gca(projection='3d')
-	ax.plot_surface(X,Y,Z_appr_mat,rstride=2,cstride=2,linewidth=1)
-	ax.plot_wireframe(X,Y,Z_mat,rstride=2,cstride=2,linewidth=1,color='r')
+	ax.plot_surface(X, Y, Z_appr_mat, rstride=2, cstride=2, linewidth=1)
+	ax.plot_wireframe(X, Y, Z_mat, rstride=2, cstride=2, linewidth=1, color='r')
 
 	plt.figure(10 * compt + 1)
 	plt.imshow(E_appr_mat, cmap='gray')
 
-	print(comparer_eclairement(E_cp[:-1],E_appr[:-1]))
+	print(comparer_eclairement(E_cp[:-1], E_appr[:-1]))
 	V_appr = np.sum(Z_appr[:-1])
 	print(V, V_appr, np.abs(V - V_appr) / V)
 

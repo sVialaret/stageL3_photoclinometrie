@@ -1,15 +1,11 @@
 # -*- coding: utf-8 -*-
 
-from os import chdir
 import scipy.sparse as sp
 from scipy.sparse.linalg import spsolve
 from time import clock
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-
-chdir('/home/rosaell/Documents/2017_2018/Stage/stageL3_photoclinometrie')
-
 from libSFS import *
 
 t1 = clock()
