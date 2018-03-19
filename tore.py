@@ -12,7 +12,7 @@ nx = 64
 ny = 64
 N = nx * ny
 
-theta = np.pi / 3
+theta = np.pi / 5
 phi = np.pi / 3
 theta_obs = 0
 phi_obs = 0
@@ -25,7 +25,7 @@ eps = 0.1
 dx = 1
 dy = 1
 
-nb_it = 5
+nb_it = 1
 
 x = np.linspace(-nx / 2, nx / 2 - 1, nx)
 y = np.linspace(-ny / 2, ny / 2 - 1, ny)
@@ -67,13 +67,25 @@ M = eps * M_lap + alpha * M_dx + beta * M_dy
 M[-1, 0] = 1
 M[-1, -1] = -1
 
+for i in range(ny):
+    M[-1, i] = 1.0 / (2 * (nx + ny) - 4)
+    M[-1, -(i + 2)] = 1.0 / (2 * (nx + ny) - 4)
+
+for j in range(ny):
+    M[-1, j * ny] = 1.0 / (2 * (nx + ny) - 4)
+    M[-1, (j + 1) * ny - 1] = 1.0 / (2 * (nx + ny) - 4)
+
+M[-1, -1] = -1
+
 print("matrice formee")
 
-grad = lambda U : (M_dx.dot(U), M_dy.dot(U))
 
-# Z,E,V = generer_surface(Nx=nx, Ny=ny, forme=('volcan',20,20,0.5,0.2,0.5), reg = 0, lV=(theta,phi),obV=(0,0))
-# Z,E,V = generer_surface(Nx=nx, Ny=ny, forme=('trap',80,80,1,0.5), reg=0, lV=(theta,phi),obV=(0,0))
-Z_mat = generer_surface(Nx=nx, Ny=ny, forme=('cone', 20, 5), reg=0)
+def grad(U): return (M_dx.dot(U), M_dy.dot(U))
+
+
+# Z_mat = generer_surface(Nx=nx, Ny=ny, forme=('volcan',20,20,0.5,0.2,0.5), reg = 0)
+# Z_mat = generer_surface(Nx=nx, Ny=ny, forme=('trap', 20, 10, 1, 0.5), reg=0)
+Z_mat = generer_surface(Nx=nx, Ny=ny, forme=('cone', 30, 5), reg=0)
 # Z,E,V = generer_surface(Nx=nx, Ny=ny, forme=('plateau',20,20,1), reg = 0, lV=(theta,phi),obV=(0,0))
 
 Z = np.reshape(Z_mat, N)
@@ -98,30 +110,47 @@ Z_appr = np.zeros(N + 1)
 
 while compt < nb_it:
 
-	compt += 1
+    compt += 1
 
-	Z_gradx, Z_grady = grad(Z_appr)
-	corr = np.sqrt(1 + Z_gradx**2 + Z_grady**2)
-	E = E_cp * corr - gamma
-	E[-1] = 0
-	    
-	# F = np.reshape(E, N)
+    Z_gradx, Z_grady = grad(Z_appr)
+    corr = np.sqrt(1 + Z_gradx**2 + Z_grady**2)
+    E = E_cp * corr - gamma
+    E[-1] = 0
 
-	Z_appr = spsolve(M,E)
-	E_appr = eclairement(Z_appr, lV, grad)
-	Z_appr_mat = np.reshape(Z_appr[:-1], (nx, ny))
-	E_appr_mat = np.reshape(E_appr[:-1], (nx, ny))
+    # F = np.reshape(E, N)
 
-	fig = plt.figure(10 * compt)
-	ax = fig.gca(projection='3d')
-	ax.plot_surface(X, Y, Z_appr_mat, rstride=2, cstride=2, linewidth=1)
-	ax.plot_wireframe(X, Y, Z_mat, rstride=2, cstride=2, linewidth=1, color='r')
+    Z_appr = spsolve(M, E)
+    # moy = 0
 
-	# plt.figure(10 * compt + 1)
-	# plt.imshow(E_appr_mat, cmap='gray')
+    # for i in range(ny):
+    #     moy = moy + Z_appr[i] + Z_appr[-(i + 2)]
 
-	print(comparer_eclairement(E_cp[:-1], E_appr[:-1]))
-	V_appr = np.sum(Z_appr[:-1])
-	print(V, V_appr, np.abs(V - V_appr) / V)
+    # for j in range(ny):
+    #     moy = moy + Z_appr[j * ny] + Z_appr[(j + 1) * ny - 1]
+    # M[-1, j * ny] = 1.0 / (2 * (nx + ny) - 4)
+    # M[-1, (j + 1) * ny - 1] = 1.0 / (2 * (nx + ny) - 4)
+
+    # moy = moy / (2 * (nx + ny) - 4)
+
+    # Z_appr = Z_appr - moy
+    # print(moy, Z_appr[0])
+
+    Z_appr = Z_appr - Z_appr[0]
+
+    E_appr = eclairement(Z_appr, lV, grad)
+    Z_appr_mat = np.reshape(Z_appr[:-1], (nx, ny))
+    E_appr_mat = np.reshape(E_appr[:-1], (nx, ny))
+
+    fig = plt.figure(10 * compt)
+    ax = fig.gca(projection='3d')
+    ax.plot_surface(X, Y, Z_appr_mat, rstride=2, cstride=2, linewidth=1)
+    ax.plot_wireframe(X, Y, Z_mat, rstride=2, cstride=2, linewidth=1, color='r')
+
+    # plt.figure(10 * compt + 1)
+    # plt.imshow(E_appr_mat, cmap='gray')
+
+    # print(comparer_eclairement(E_cp[:-1], E_appr[:-1]))
+    V_appr = np.sum(Z_appr[:-1])
+    print(np.abs(V - V_appr) / V)
 
 plt.show()
