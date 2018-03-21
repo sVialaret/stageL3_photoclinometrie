@@ -49,7 +49,7 @@ def generer_surface(Nx = 64, Ny = 64, forme = ('plateau', 16, 16, 1), reg = 0):
         if 2*sigx > Nx or 2*sigy > Ny:
             raise ValueError('Surface trop large')
         # Z = H*np.exp(-(1/(sigx**2-X**2))-(1/(sigy**2-Y**2)))*T
-        Z[Nx/2-sigx+1:Nx/2+sigx-1,Ny/2 - sigy+1:Ny/2 + sigy-1] = H*np.exp(-(1/(sigx**2-X[Nx/2-sigx+1:Nx/2+sigx-1,Ny/2 - sigy+1:Ny/2 + sigy-1]**2))-(1/(sigy**2-Y[Nx/2-sigx+1:Nx/2+sigx-1,Ny/2 - sigy+1:Ny/2 + sigy-1]**2)))
+        Z[Nx//2-sigx+1:Nx//2+sigx-1,Ny//2 - sigy+1:Ny//2 + sigy-1] = H*np.exp(-(1/(sigx**2-X[Nx//2-sigx+1:Nx//2+sigx-1,Ny//2 - sigy+1:Ny//2 + sigy-1]**2))-(1/(sigy**2-Y[Nx//2-sigx+1:Nx//2+sigx-1,Ny//2 - sigy+1:Ny//2 + sigy-1]**2)))
         
     
     elif forme[0] == 'cone':
