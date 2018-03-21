@@ -2,89 +2,15 @@ import numpy as np
 import pylab as plt
 import scipy.misc as imageio
 from libSFS import *
+from libFourier import *
 from scipy.signal import convolve2d
 from mpl_toolkits.mplot3d import Axes3D
 from numpy.fft import fftshift,fft2,ifft2
-#from fonctions_utiles import *
 from scipy.fftpack import dct,dst,idct,idst
 
 plt.rcParams["image.cmap"]="gray"
 plt.ion()
 plt.show()
-
-def build_centered_indices(M,N):
-    i = M//2 - (M//2 - np.arange(0,M)) % M  # (0, 1, ..., M/2, -M/2, ..., -1)
-    j = N//2 - (N//2 - np.arange(0,N)) % N  # (0, 1, ..., M/2, -M/2, ..., -1)
-    return np.meshgrid(i, j)
-
-def inv_cl2(u,alpha,beta,gamma,epsilon):
-    u=np.array(u)
-    M,N = u.shape
-    U = fft2(u)
-    U[0,0]=U[0,0]-gamma
-    (ii, jj) = build_centered_indices(N,M)
-    D = (2*1j*np.pi)*((ii/N)*alpha + (jj/M)*beta) + epsilon*(-4*(np.pi)**2*((ii/N)**2+(jj/M)**2))
-    D[0,0]=1
-    for h in range(N):
-        for k in range(N):
-            if D[h,k]==0:
-                D[h,k]=1
-    X = U/D
-    #X=np.real(X)
-    
-    return np.real(ifft2(X))
-
-def inv_cl_real(u,alpha,beta,gamma):
-    u=np.array(u)
-    M,N = u.shape
-    U = fft2(u)
-    U[0,0]=U[0,0]-gamma
-    (ii, jj) = build_centered_indices(N,M)
-    D = (2*1j*np.pi)*((ii/N)*alpha + (jj/M)*beta)
-    D[0,0]=1
-    for h in range(N):
-        for k in range(N):
-            if D[h,k]==0:
-                D[h,k]=1
-    X = U/D
-    X=np.real(X)
-    return np.real(ifft2(X))
-    
-def inv_cl_imag(u,alpha,beta,gamma):
-    u=np.array(u)
-    M,N = u.shape
-    U = fft2(u)
-    U[0,0]=U[0,0]-gamma
-    (ii, jj) = build_centered_indices(N,M)
-    D = (2*1j*np.pi)*((ii/N)*alpha + (jj/M)*beta)
-    D[0,0]=1
-    for h in range(N):
-        for k in range(N):
-            if D[h,k]==0:
-                D[h,k]=1
-    X = U/D
-    X=1j*np.imag(X)
-    return np.real(ifft2(X))
-    
-    
-def laplacien_per_dft2(u):
-    M,N = u.shape
-    U = fft2(u);
-    (ii, jj) = build_centered_indices(N,M)
-    dx = (2j * np.pi / N) * ii
-    dy = (2j * np.pi / M) * jj
-    dxU = dx**2 * U
-    dyU = dy**2 * U
-    Du = np.real(ifft2(dxU+dyU))
-    return Du
-    
-# def estimation_volume(I,z,alpha,beta,gamma):
-#     V=-gamma*(alpha+beta)/(2*(alpha**2+beta**2))
-#     L=laplacien_per_dft2(z)
-#     for k in range(N):
-#         for m in range(N):
-#             V+=((alpha*(1-k/N)+beta*(1-m/N))*I[k,m]-(1-k/N)*(1-m/N)*L[k,m])/(alpha**2+beta**2)
-#     return V
 
 ## Paramètres de la simulation
 
@@ -107,9 +33,6 @@ i=fft2(I)
 plt.figure(17)
 i=fftshift(i)
 plt.imshow(np.log(1+abs(i)))
-
-#(Ix,Iy)=gradient_tfd2(I)
-#C=1 #Albedo du matériau, à ajuster avec un exemple réel
 
 ## Résolution du problème
 
@@ -154,28 +77,15 @@ z2[N-1,0:N]=0
 
 E1=eclairement(z1,[alpha,beta,gamma],np.gradient)
 E2=eclairement(z2,[alpha,beta,gamma],np.gradient)
-L=laplacien_per_dft2(Z)
-L1=laplacien_per_dft2(z1)
-L2=laplacien_per_dft2(z2)
 
 V1=np.sum(z1)
 V2=np.sum(z2)
-# V2p=estimation_volume(I,z2,alpha,beta,gamma)
-# Vp=estimation_volume(I,Z,alpha,beta,gamma)
-# V1p=estimation_volume(I,z1,alpha,beta,gamma)
 
 print(V)
 print(V1)
 print(V2)
-# print(Vp)
-# print(V1p)
-# print(V2p)
 print(np.abs((V1-V)/V))
 print(np.abs((V2-V)/V))
-# print(np.abs((Vp-V)/V))
-# print(np.abs((V1p-V)/V))
-# print(np.abs((V2p-V)/V))
-
     
 ## Affichage des résultats
 
@@ -185,28 +95,21 @@ X,Y = np.meshgrid(y,x)
 
 fig = plt.figure(1)
 ax = fig.gca(projection='3d')
-ax.plot_surface(X,Y,z1,rstride=2,cstride=2,linewidth=1)
+ax.plot_surface(X,Y,Z,rstride=2,cstride=2,linewidth=1)
 
 fig = plt.figure(2)
 ax = fig.gca(projection='3d')
+ax.plot_surface(X,Y,z1,rstride=2,cstride=2,linewidth=1)
+
+fig = plt.figure(3)
+ax = fig.gca(projection='3d')
 ax.plot_surface(X,Y,z2,rstride=2,cstride=2,linewidth=1)
 
-fig = plt.figure(17)
-ax = fig.gca(projection='3d')
-ax.plot_surface(X,Y,Z,rstride=2,cstride=2,linewidth=1)
+plt.figure(4)
+plt.imshow(I)
 
 plt.figure(5)
 plt.imshow(E1)
 
 plt.figure(6)
 plt.imshow(E2)
-
-# plt.figure(7)
-# plt.imshow(E3)
-
-plt.figure(8)
-plt.imshow(I)
-
-# fig = plt.figure(5)
-# ax = fig.gca(projection='3d')
-# ax.plot_surface(X,Y,Iy,rstride=2,cstride=2,linewidth=1)
