@@ -68,17 +68,17 @@ def generer_surface(Nx = 64, Ny = 64, forme = ('plateau', 16, 16, 1), reg = 0):
         ru = rb*(H-h)/H
         Z_tmp = np.zeros((Nx,Ny))
         
-        Z = H*(rb-((X+L/2)**2+Y**2)**.5)/rb
+        Z = H*(rb-((X+L//2)**2+Y**2)**.5)/rb
         Z = Z * (Z>0)
-        Z[:,Ny/2-L/2:] = 0
+        Z[:,Ny//2-L//2:] = 0
         Z_tmp = H*(rb-((X-L/2)**2+Y**2)**.5)/rb
         Z_tmp = Z_tmp * (Z_tmp>0)
-        Z_tmp[:,:Ny/2+L/2] = 0
+        Z_tmp[:,:Ny//2+L//2] = 0
         
         Z = Z + Z_tmp
         
-        Z[Nx/2:Nx/2+rb,Ny/2 - L/2:Ny/2 + L/2] = H*(rb-Y[Nx/2:Nx/2+rb,Ny/2 - L/2:Ny/2 + L/2])/rb
-        Z[Nx/2-rb:Nx/2,Ny/2 - L/2:Ny/2 + L/2] = H*(Y[Nx/2:Nx/2+rb,Ny/2 - L/2:Ny/2 + L/2])/rb
+        Z[Nx//2:Nx//2+rb,Ny//2 - L//2:Ny//2 + L//2] = H*(rb-Y[Nx//2:Nx//2+rb,Ny//2 - L//2:Ny//2 + L//2])/rb
+        Z[Nx//2-rb:Nx//2,Ny//2 - L//2:Ny//2 + L//2] = H*(Y[Nx//2:Nx//2+rb,Ny//2 - L//2:Ny//2 + L//2])/rb
         
         Z = Z - (Z-h) * (Z>=h)
     
@@ -91,14 +91,13 @@ def generer_surface(Nx = 64, Ny = 64, forme = ('plateau', 16, 16, 1), reg = 0):
             raise ValueError('Surface trop large')
         # Z = H*np.exp(-(1/(sigx**2-X**2))-(1/(sigy**2-Y**2)))*T
         
-        Z[Nx/2-sigx+1:Nx/2+sigx-1,Ny/2 - sigy+1:Ny/2 + sigy-1] = H*np.exp(-(1/(sigx**2-X[Nx/2-sigx+1:Nx/2+sigx-1,Ny/2 - sigy+1:Ny/2 + sigy-1]**2))-(1/(sigy**2-Y[Nx/2-sigx+1:Nx/2+sigx-1,Ny/2 - sigy+1:Ny/2 + sigy-1]**2)))
+        Z[Nx//2-sigx+1:Nx//2+sigx-1,Ny//2 - sigy+1:Ny//2 + sigy-1] = H*np.exp(-(1/(sigx**2-X[Nx//2-sigx+1:Nx//2+sigx-1,Ny//2 - sigy+1:Ny//2 + sigy-1]**2))-(1/(sigy**2-Y[Nx//2-sigx+1:Nx//2+sigx-1,Ny//2 - sigy+1:Ny//2 + sigy-1]**2)))
         
-        Z_trou[Nx/2-k*sigx+1:Nx/2+k*sigx-1,Ny/2 - k*sigy+1:Ny/2 + k*sigy-1] = p*np.exp(-(1/((k*sigx)**2-X[Nx/2-k*sigx+1:Nx/2+k*sigx-1,Ny/2 - k*sigy+1:Ny/2 + k*sigy-1]**2))-(1/((k*sigy)**2-Y[Nx/2-k*sigx+1:Nx/2+k*sigx-1,Ny/2 - k*sigy+1:Ny/2 + k*sigy-1]**2)))
+        Z_trou[Nx//2-int(k*sigx)+1:Nx//2+int(k*sigx)-1,Ny//2 - int(k*sigy)+1:Ny//2 + int(k*sigy)-1] = p*np.exp(-(1/(int(k*sigx)**2-X[Nx//2-int(k*sigx)+1:Nx//2+int(k*sigx)-1,Ny//2 - int(k*sigy)+1:Ny//2 + int(k*sigy)-1]**2))-(1/(int(k*sigy)**2-Y[Nx//2-int(k*sigx)+1:Nx//2+int(k*sigx)-1,Ny//2 - int(k*sigy)+1:Ny//2 + int(k*sigy)-1]**2)))
+        
         
         # Z_trou = p*np.exp(-(1/((k*sigx)**2-X**2))-(1/((k*sigy)**2-Y**2)))*Tk
         Z = Z - Z_trou
-        
-        
         
     
     # Regularisation eventuelle
