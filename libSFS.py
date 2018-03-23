@@ -125,7 +125,7 @@ def eclairement(Z, lV, grad):
     """
 
     gradZx, gradZy = grad(Z)
-    E = (lV[2] + lV[0] * gradZx + lV[1] * gradZy) / (1 + gradZx ** 2 + gradZy ** 2)
+    E = (lV[2] + lV[0] * gradZx + lV[1] * gradZy) / (1 + gradZx ** 2 + gradZy ** 2) ** .5
     # E = (lV[2] + lV[0]*gradZx +lV[1]*gradZy)
     
     return E
