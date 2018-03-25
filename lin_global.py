@@ -6,22 +6,21 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from libSFS import *
-
-t1 = clock()
+# import scipy.misc as io
 
 nx = 64
 ny = 64
 N = nx * ny
 
-theta = np.pi / 5
-phi = np.pi / 3
+theta = np.pi / 3
+phi = np.pi / 4
 theta_obs = 0
 phi_obs = 0
 lV = direction_eclairement((theta, phi), (theta_obs, phi_obs))
 
 alpha, beta, gamma = lV
 
-eps = 0.1
+eps = 0.01
 
 dx = 1
 dy = 1
@@ -57,6 +56,9 @@ K_ii_dx = K_ii_dx.tocsr()
 K_ij_dx = sp.lil_matrix((nx, nx))
 K_ij_dx.setdiag(1, 1)
 K_ij_dx[0, 1] = 0
+
+# K_ij_dx[-2, -1] = 0
+
 K_ij_dx = K_ij_dx.tocsr()
 
 K_id = sp.lil_matrix((nx, nx))
@@ -72,10 +74,8 @@ M_ii_dy.setdiag(1, 1)
 M_ii_dy.setdiag(-1)
 M_ii_dy[0, 0] = 1
 M_ii_dy[0, 1] = 0
-M_ii_dy[1, 0] = 0
 M_ii_dy[-1, -1] = 1
 M_ii_dy[-1, -2] = 0
-M_ii_dy[-2, -1] = 0
 M_ii_dy = M_ii_dy.tocsr()
 
 K_ii_dy = sp.lil_matrix((nx, nx))
@@ -88,22 +88,55 @@ M_dy = (sp.kron(K_id, sp.eye(ny)) + sp.kron(K_ii_dy, M_ii_dy)) / dy
 
 # Matrice du laplacien
 
-M_lap = M_dx.transpose().dot(M_dx) + M_dy.T.dot(M_dy)
+M_ii_lap = sp.lil_matrix((ny, ny))
+M_ii_lap.setdiag(-2 * (1 / dx ** 2 + 1 / dy ** 2))
+M_ii_lap.setdiag(1 / dy ** 2, 1)
+M_ii_lap.setdiag(1 / dy ** 2, -1)
+M_ii_lap[0, 0] = 1
+M_ii_lap[-1, -1] = 1
+M_ii_lap[0, 1] = 0
+M_ii_lap[-1, -2] = 0
+M_ii_lap = M_ii_lap.tocsr()
+
+K_ii_lap = sp.lil_matrix((nx, nx))
+K_ii_lap.setdiag(1)
+K_ii_lap[0, 0] = 0
+K_ii_lap[-1, -1] = 0
+K_ii_lap = K_ii_lap.tocsr()
+
+M_ij_lap = sp.lil_matrix((ny, ny))
+M_ij_lap.setdiag(1 / dx ** 2)
+M_ij_lap[0, 0] = 0
+M_ij_lap[-1, -1] = 0
+M_ij_lap = M_ij_lap.tocsr()
+
+K_ij_lap = sp.lil_matrix((nx, nx))
+K_ij_lap.setdiag(1, 1)
+K_ij_lap[0, 1] = 0
+K_ij_lap = K_ij_lap.tocsr()
+
+K_ji_lap = sp.lil_matrix((nx, nx))
+K_ji_lap.setdiag(1, -1)
+K_ji_lap[-1, -2] = 0
+K_ji_lap = K_ji_lap.tocsr()
+
+
+
+
+M_lap = -sp.kron(K_id, sp.eye(ny)) + sp.kron(K_ii_lap, M_ii_lap) + sp.kron(K_ij_lap, M_ij_lap) + sp.kron(K_ji_lap, M_ij_lap)
 
 # Matrice finale
 
 M = eps * M_lap + alpha * M_dx + beta * M_dy
 
-print("matrice formee")
-
-
 def grad(U): return (M_dx.dot(U), M_dy.dot(U))
 
-
-# Z,E,V = generer_surface(Nx=nx, Ny=ny, forme=('volcan',20,20,0.5,0.2,0.5), reg = 0, lV=(theta,phi),obV=(0,0))
-# Z,E,V = generer_surface(Nx=nx, Ny=ny, forme=('trap',80,80,1,0.5), reg=0, lV=(theta,phi),obV=(0,0))
-Z_mat = generer_surface(Nx=nx, Ny=ny, forme=('cone', 30, 5), reg=0)
+# Z_mat = generer_surface(Nx=nx, Ny=ny, forme=('volcan',20,20,0.5,0.2,0.5), reg = 0)
+Z_mat = generer_surface(Nx=nx, Ny=ny, forme=('trap',10,20,0.5,0.1), reg=4)
+# Z_mat = generer_surface(Nx=nx, Ny=ny, forme=('cone', 30, 10), reg=0)
 # Z,E,V = generer_surface(Nx=nx, Ny=ny, forme=('plateau',20,20,1), reg = 0, lV=(theta,phi),obV=(0,0))
+
+# Z_mat = io.imread('lena.png')
 
 Z = np.reshape(Z_mat, N)
 
@@ -120,8 +153,8 @@ compt = 0
 
 Z_appr = np.zeros(N)
 
-plt.figure(-5)
-plt.imshow(E_cp_mat, cmap='gray')
+# plt.figure(-5)
+# plt.imshow(E_cp_mat, cmap='gray')
 
 while compt < nb_it:
 
@@ -139,7 +172,9 @@ while compt < nb_it:
         E[j * ny] = 0
         E[(j + 1) * ny - 1] = 0
 
-    Z_appr = spsolve(M, E)
+    Z_appr = spsolve(M.T.dot(M), M.T.dot(E).T)
+    
+    print(np.max(np.abs(M.T.dot(M).dot(Z_appr)-M.T.dot(E).T)))
 
     E_appr = eclairement(Z_appr, lV, grad)
     Z_appr_mat = np.reshape(Z_appr, (nx, ny))
@@ -154,8 +189,11 @@ while compt < nb_it:
     # ax = fig.gca(projection='3d')
     # ax.plot_surface(X,Y,Z_appr_n - Z_appr,rstride=2,cstride=2,linewidth=1)
 
-    plt.figure(10 * compt + 2)
-    plt.imshow(E_appr_mat, cmap='gray')
+    # plt.figure(10 * compt + 2)
+    # plt.imshow(E_appr_mat, cmap='gray')
+    
+    # plt.figure()
+    # plt.imshow(np.abs(E_appr_mat - E_cp_mat), cmap='gray', vmin = 0, vmax = 1)
 
     print(comparer_eclairement(E_cp, E_appr))
     V_appr = np.sum(Z_appr)
