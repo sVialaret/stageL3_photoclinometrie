@@ -148,6 +148,16 @@ def comparer_eclairement(E1, E2):
     return N1, N2, N_uni
 
 
-def bruit_gaussien(Z, sigma):
-    bruit = sigma * rand.randn(Z.shape)
-    return Z + bruit
+def bruit_gaussien(I, sigma):
+
+    bruit = sigma * rand.standard_normal(I.shape)
+    return I + bruit
+
+def bruit_selpoivre(I, freq):
+
+    bruit = rand.randint(int(1/freq) + 1, size = I.shape)
+    indexP = np.where(bruit == 0)
+    indexS = np.where(bruit == int(1/freq) + 1)
+    I[indexP] = 0
+    I[indexS] = 1
+    return I
