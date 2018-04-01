@@ -1,160 +1,197 @@
 # -*- coding: utf-8 -*-
 
 import scipy.sparse as sp
-from scipy.sparse.linalg import spsolve
+from scipy.sparse.linalg import spsolve, eigs
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from libSFS import *
-# import scipy.misc as io
+import scipy.misc as io
 
 nx = 64
 ny = 64
 N = nx * ny
 
-theta = np.pi / 3
-phi = np.pi / 4
+theta = np.pi / 4
+phi = np.pi / 3
 theta_obs = 0
 phi_obs = 0
 lV = direction_eclairement((theta, phi), (theta_obs, phi_obs))
 
 alpha, beta, gamma = lV
 
-eps = 0.01
+eps = 0.1
 
 dx = 1
 dy = 1
 
-nb_it = 1
+nb_it = 5
 
 x = np.linspace(-nx / 2, nx / 2 - 1, nx)
 y = np.linspace(-ny / 2, ny / 2 - 1, ny)
 X, Y = np.meshgrid(y, x)
 
-# gradient decentre
-
-# Matrice du gradient selon x
-
-M_ii_dx = sp.lil_matrix((ny, ny))
-M_ii_dx.setdiag(-1)
-M_ii_dx[0, 0] = 1
-M_ii_dx[-1, -1] = 1
-M_ii_dx = M_ii_dx.tocsr()
-
-M_ij_dx = sp.lil_matrix((ny, ny))
-M_ij_dx.setdiag(1)
-M_ij_dx[0, 0] = 0
-M_ij_dx[-1, -1] = 0
-M_ij_dx = M_ij_dx.tocsr()
-
-K_ii_dx = sp.lil_matrix((nx, nx))
-K_ii_dx.setdiag(1)
-K_ii_dx[0, 0] = 0
-K_ii_dx[-1, -1] = 0
-K_ii_dx = K_ii_dx.tocsr()
-
-K_ij_dx = sp.lil_matrix((nx, nx))
-K_ij_dx.setdiag(1, 1)
-K_ij_dx[0, 1] = 0
-
-# K_ij_dx[-2, -1] = 0
-
-K_ij_dx = K_ij_dx.tocsr()
-
-K_id = sp.lil_matrix((nx, nx))
+K_id = sp.csr_matrix((nx, nx))
 K_id[0, 0] = 1
 K_id[-1, -1] = 1
 
-M_dx = (sp.kron(K_id, sp.eye(ny)) + sp.kron(K_ii_dx, M_ii_dx) + sp.kron(K_ij_dx, M_ij_dx)) / dx
+Dx_ii = sp.lil_matrix((ny, ny))
+Dx_ii.setdiag(-1.0 / dx)
+Dx_ii.setdiag(1.0 / dx, 1)
+Dx_ii = Dx_ii.tocsr()
+Dx_ii[0, 0] = 1
+Dx_ii[0, 1] = 0
+Dx_ii[-1, -1] = 1
 
-# Matrice du gradient selon y
+Kx_ii = sp.eye(nx)
+Kx_ii = Kx_ii.tocsr()
+Kx_ii[0, 0] = 0
+Kx_ii[-1, -1] = 0
 
-M_ii_dy = sp.lil_matrix((ny, ny))
-M_ii_dy.setdiag(1, 1)
-M_ii_dy.setdiag(-1)
-M_ii_dy[0, 0] = 1
-M_ii_dy[0, 1] = 0
-M_ii_dy[-1, -1] = 1
-M_ii_dy[-1, -2] = 0
-M_ii_dy = M_ii_dy.tocsr()
-
-K_ii_dy = sp.lil_matrix((nx, nx))
-K_ii_dy.setdiag(1)
-K_ii_dy[0, 0] = 0
-K_ii_dy[-1, -1] = 0
-K_ii_dy = K_ii_dy.tocsr()
-
-M_dy = (sp.kron(K_id, sp.eye(ny)) + sp.kron(K_ii_dy, M_ii_dy)) / dy
-
-# Matrice du laplacien
-
-M_ii_lap = sp.lil_matrix((ny, ny))
-M_ii_lap.setdiag(-2 * (1 / dx ** 2 + 1 / dy ** 2))
-M_ii_lap.setdiag(1 / dy ** 2, 1)
-M_ii_lap.setdiag(1 / dy ** 2, -1)
-M_ii_lap[0, 0] = 1
-M_ii_lap[-1, -1] = 1
-M_ii_lap[0, 1] = 0
-M_ii_lap[-1, -2] = 0
-M_ii_lap = M_ii_lap.tocsr()
-
-K_ii_lap = sp.lil_matrix((nx, nx))
-K_ii_lap.setdiag(1)
-K_ii_lap[0, 0] = 0
-K_ii_lap[-1, -1] = 0
-K_ii_lap = K_ii_lap.tocsr()
-
-M_ij_lap = sp.lil_matrix((ny, ny))
-M_ij_lap.setdiag(1 / dx ** 2)
-M_ij_lap[0, 0] = 0
-M_ij_lap[-1, -1] = 0
-M_ij_lap = M_ij_lap.tocsr()
-
-K_ij_lap = sp.lil_matrix((nx, nx))
-K_ij_lap.setdiag(1, 1)
-K_ij_lap[0, 1] = 0
-K_ij_lap = K_ij_lap.tocsr()
-
-K_ji_lap = sp.lil_matrix((nx, nx))
-K_ji_lap.setdiag(1, -1)
-K_ji_lap[-1, -2] = 0
-K_ji_lap = K_ji_lap.tocsr()
+Dx = sp.kron(Kx_ii, Dx_ii) + sp.kron(K_id, sp.eye(ny))
 
 
+Dy_ii = sp.eye(ny) * (-1 / dy)
+Dy_ii = Dy_ii.tocsr()
+Dy_ii[0, 0] = 1
+Dy_ii[-1, -1] = 1
+
+Ky_ii = sp.eye(nx)
+Ky_ii = Ky_ii.tocsr()
+Ky_ii[0, 0] = 0
+Ky_ii[-1, -1] = 0
+
+Dy_ij = sp.eye(ny) / dy
+Dy_ij = Dy_ij.tocsr()
+Dy_ij[0, 0] = 0
+Dy_ij[-1, -1] = 0
+
+Ky_ij = sp.lil_matrix((nx, nx))
+Ky_ij.setdiag(1, 1)
+Ky_ij = Ky_ij.tocsr()
+Ky_ij[0, 1] = 0
+
+Dy = sp.kron(Ky_ii, Dy_ii) + sp.kron(Ky_ij, Dy_ij) + sp.kron(K_id, sp.eye(ny))
 
 
-M_lap = -sp.kron(K_id, sp.eye(ny)) + sp.kron(K_ii_lap, M_ii_lap) + sp.kron(K_ij_lap, M_ij_lap) + sp.kron(K_ji_lap, M_ij_lap)
+Lap_ii = sp.lil_matrix((ny, ny))
+Lap_ii.setdiag(-2 * (1 / dx ** 2 + 1 / dy ** 2))
+Lap_ii.setdiag(1 / dx ** 2, 1)
+Lap_ii.setdiag(1 / dx ** 2, -1)
+Lap_ii = Lap_ii.tocsr()
+Lap_ii[0, 0] = 1
+Lap_ii[0, 1] = 0
+Lap_ii[-1, -1] = 1
+Lap_ii[-1, -2] = 0
 
-# Matrice finale
+Klap_ii = sp.eye(nx)
+Klap_ii = Klap_ii.tocsr()
+Klap_ii[0, 0] = 0
+Klap_ii[-1, -1] = 0
 
-M = eps * M_lap + alpha * M_dx + beta * M_dy
+Lap_ij = sp.eye(ny) / (dy ** 2)
+Lap_ij = Lap_ij.tocsr()
+Lap_ij[0, 0] = 0
+Lap_ij[-1, -1] = 0
 
-def grad(U): return (M_dx.dot(U), M_dy.dot(U))
+Klap_ij = sp.lil_matrix((nx, nx))
+Klap_ij.setdiag(1, 1)
+Klap_ij.setdiag(1, -1)
+Klap_ij = Klap_ij.tocsr()
+Klap_ij[0, 1] = 0
+Klap_ij[-1, -2] = 0
 
-# Z_mat = generer_surface(Nx=nx, Ny=ny, forme=('volcan',20,20,0.5,0.2,0.5), reg = 0)
-Z_mat = generer_surface(Nx=nx, Ny=ny, forme=('trap',10,20,0.5,0.1), reg=4)
-# Z_mat = generer_surface(Nx=nx, Ny=ny, forme=('cone', 30, 10), reg=0)
-# Z,E,V = generer_surface(Nx=nx, Ny=ny, forme=('plateau',20,20,1), reg = 0, lV=(theta,phi),obV=(0,0))
+Lap = sp.kron(K_id, sp.eye(ny)) + sp.kron(Klap_ii, Lap_ii) + sp.kron(Klap_ij, Lap_ij)
 
-# Z_mat = io.imread('lena.png')
+M = alpha * Dx + beta * Dy + eps * Lap
+
+# print(eigs(M)[0])
+
+
+# B = np.ones(N)
+
+# for i in range(ny):
+#     B[i] = 0
+#     B[-(i + 1)] = 0
+
+# for j in range(nx):
+#     B[j * ny] = 0
+#     B[(j + 1) * ny - 1] = 0
+
+# X_sol = spsolve(Dx, B)
+
+# fig = plt.figure()
+# ax = fig.gca(projection='3d')
+# ax.plot_surface(X, Y, X_sol.reshape((nx, ny)), rstride=2, cstride=2, linewidth=1)
+# plt.show()
+
+# plt.figure()
+# plt.imshow(Dx.A, cmap='gray')
+# plt.title('dx')
+# plt.figure()
+# plt.imshow(Dy.A, cmap='gray')
+# plt.title('dy')
+# plt.figure()
+# plt.imshow(Lap.A, cmap='gray')
+# plt.title('lap')
+# plt.figure()
+# plt.imshow(M.A, cmap='gray')
+# plt.title('M')
+# plt.show()
+
+def grad(U): return (Dx.dot(U), Dy.dot(U))
+
+
+# F = np.ones(N)
+
+# for i in range(ny):
+#         F[i] = 0
+#         F[-(i + 1)] = 0
+
+# for j in range(nx):
+#     F[j * ny] = 0
+#     F[(j + 1) * ny - 1] = 0
+
+# Fx, Fy = grad(F)
+# Flap = Lap.dot(F)
+
+# plt.figure(1)
+# plt.imshow(Fx.reshape((nx, ny)), cmap='gray')
+# plt.figure(2)
+# plt.imshow(Fy.reshape((nx, ny)), cmap='gray')
+# plt.figure(3)
+# plt.imshow(Flap.reshape((nx, ny)), cmap='gray')
+
+# plt.show()
+
+
+Z_mat = generer_surface(Nx=nx, Ny=ny, forme=('volcan',20,20,0.5,0.2,0.5), reg = 3)
+# Z_mat = generer_surface(Nx=nx, Ny=ny, forme=('trap',0,20,1,0.5), reg=0)
+# Z_mat = generer_surface(Nx=nx, Ny=ny, forme=('cone', 20, 15), reg=0)
+# Z_mat = generer_surface(Nx=nx, Ny=ny, forme=('plateau',20,20,1), reg = 0)
 
 Z = np.reshape(Z_mat, N)
 
 E = eclairement(Z, lV, grad)
+# E = bruit_gaussien(E, 0.1)
+# E = bruit_selpoivre(E, 0.01)
 
 E_cp = E.copy()
 E_cp_mat = np.reshape(E_cp, (nx, ny))
 
 V = np.sum(Z)
 
-print("surface generee")
+# E_cp_mat = io.imread('img/lune.jpeg', 'L')
+# E_cp_mat = (E_cp_mat - np.min(E_cp_mat))/(np.max(E_cp_mat) - np.min(E_cp_mat))
+# E = np.reshape(E_cp_mat, N)
+# E_cp = E.copy()
 
 compt = 0
 
 Z_appr = np.zeros(N)
 
-# plt.figure(-5)
-# plt.imshow(E_cp_mat, cmap='gray')
+plt.figure(-5)
+plt.imshow(E_cp_mat, cmap='gray')
 
 while compt < nb_it:
 
@@ -173,8 +210,8 @@ while compt < nb_it:
         E[(j + 1) * ny - 1] = 0
 
     Z_appr = spsolve(M.T.dot(M), M.T.dot(E).T)
-    
-    print(np.max(np.abs(M.T.dot(M).dot(Z_appr)-M.T.dot(E).T)))
+
+    # print(np.max(np.abs(M.T.dot(M).dot(Z_appr)-M.T.dot(E).T)))
 
     E_appr = eclairement(Z_appr, lV, grad)
     Z_appr_mat = np.reshape(Z_appr, (nx, ny))
@@ -191,7 +228,7 @@ while compt < nb_it:
 
     # plt.figure(10 * compt + 2)
     # plt.imshow(E_appr_mat, cmap='gray')
-    
+
     # plt.figure()
     # plt.imshow(np.abs(E_appr_mat - E_cp_mat), cmap='gray', vmin = 0, vmax = 1)
 

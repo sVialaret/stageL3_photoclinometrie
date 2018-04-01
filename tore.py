@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from libSFS import *
 
-nx = 64
+nx = 42
 ny = 64
 N = nx * ny
 
@@ -70,13 +70,13 @@ M[-1, -1] = -1
 
 # print(np.min(np.abs(linalg.eig(M.todense())[0])))
 
-for i in range(ny):
-    M[-1, i] = 1.0 / (2 * (nx + ny) - 4)
-    M[-1, -(i + 2)] = 1.0 / (2 * (nx + ny) - 4)
+# for i in range(ny):
+#     M[-1, i] = 1.0 / (2 * (nx + ny) - 4)
+#     M[-1, -(i + 2)] = 1.0 / (2 * (nx + ny) - 4)
 
-for j in range(ny):
-    M[-1, j * ny] = 1.0 / (2 * (nx + ny) - 4)
-    M[-1, (j + 1) * ny - 1] = 1.0 / (2 * (nx + ny) - 4)
+# for j in range(ny):
+#     M[-1, j * ny] = 1.0 / (2 * (nx + ny) - 4)
+#     M[-1, (j + 1) * ny - 1] = 1.0 / (2 * (nx + ny) - 4)
 
 M[-1, -1] = -1
 
@@ -88,8 +88,10 @@ def grad(U): return (M_dx.dot(U), M_dy.dot(U))
 
 # Z_mat = generer_surface(Nx=nx, Ny=ny, forme=('volcan',20,20,0.5,0.2,0.5), reg = 0)
 # Z_mat = generer_surface(Nx=nx, Ny=ny, forme=('trap', 20, 10, 1, 0.5), reg=0)
-Z_mat = generer_surface(Nx=nx, Ny=ny, forme=('cone', 20, 10), reg=0)
+Z_mat = generer_surface(Nx=nx, Ny=ny, forme=('cone', 20, 5), reg=0)
 # Z,E,V = generer_surface(Nx=nx, Ny=ny, forme=('plateau',20,20,1), reg = 0, lV=(theta,phi),obV=(0,0))
+
+# Z_mat = io.imread('../img/lune.jpeg')
 
 Z = np.reshape(Z_mat, N)
 
@@ -129,19 +131,19 @@ while compt < nb_it:
     # Z_appr = spsolve(M, E)
     
     # print(np.max(np.abs(M2.dot(Z_appr)-M.T.dot(E).T)))
-    moy = 0
+    # moy = 0
 
-    for i in range(ny):
-        moy = moy + Z_appr[i] + Z_appr[-(i + 2)]
+    # for i in range(ny):
+    #     moy = moy + Z_appr[i] + Z_appr[-(i + 2)]
 
-    for j in range(1, ny - 1):
-        moy = moy + Z_appr[j * ny] + Z_appr[(j + 1) * ny - 1]
-    M[-1, j * ny] = 1.0 / (2 * (nx + ny) - 4)
-    M[-1, (j + 1) * ny - 1] = 1.0 / (2 * (nx + ny) - 4)
+    # for j in range(1, ny - 1):
+    #     moy = moy + Z_appr[j * ny] + Z_appr[(j + 1) * ny - 1]
+    # M[-1, j * ny] = 1.0 / (2 * (nx + ny) - 4)
+    # M[-1, (j + 1) * ny - 1] = 1.0 / (2 * (nx + ny) - 4)
 
-    moy = moy / (2 * (nx + ny) - 4)
+    # moy = moy / (2 * (nx + ny) - 4)
 
-    Z_appr = Z_appr - moy
+    Z_appr = Z_appr - Z_appr[0]
     # print(moy, Z_appr[0])
 
     # Z_appr = Z_appr - Z_appr[0]
@@ -153,10 +155,10 @@ while compt < nb_it:
     fig = plt.figure(10 * compt)
     ax = fig.gca(projection='3d')
     ax.plot_surface(X, Y, Z_appr_mat, rstride=2, cstride=2, linewidth=1)
-    # ax.plot_wireframe(X, Y, Z_mat, rstride=2, cstride=2, linewidth=1, color='r')
+    ax.plot_wireframe(X, Y, Z_mat, rstride=2, cstride=2, linewidth=1, color='r')
 
-    plt.figure(10 * compt + 1)
-    plt.imshow(E_appr_mat, cmap='gray')
+    # plt.figure(10 * compt + 1)
+    # plt.imshow(E_appr_mat, cmap='gray')
 
     print(comparer_eclairement(E_cp[:-1], E_appr[:-1]))
     V_appr = np.sum(Z_appr[:-1])
