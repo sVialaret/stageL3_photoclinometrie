@@ -25,9 +25,9 @@ eps = 0.1
 dx = 1.0
 dy = 1.0
 
-nb_it = 1
+nb_it = 5
 
-CB = sp.lil_matrix(N)
+# CB = sp.csr_matrix(N)
 # for i in range(ny):
 #     CB[i] = 0
 #     CB[-(i + 1)] = 0
@@ -193,9 +193,9 @@ def grad(U): return (Dx.dot(U), Dy.dot(U))
 # plt.show()
 
 
-Z_mat = generer_surface(Nx=nx, Ny=ny, forme=('volcan',100,100,0.5,0.2,0.5), reg = 1)
+# Z_mat = generer_surface(Nx=nx, Ny=ny, forme=('volcan',100,100,0.5,0.2,0.5), reg = 1)
 # Z_mat = generer_surface(Nx=nx, Ny=ny, forme=('trap',30,100,1,0.5), reg=0)
-# Z_mat = generer_surface(Nx=nx, Ny=ny, forme=('cone', 100, 10), reg=0)
+Z_mat = generer_surface(Nx=nx, Ny=ny, forme=('cone', 100, 50), reg=0)
 # Z_mat = generer_surface(Nx=nx, Ny=ny, forme=('plateau',20,20,1), reg = 0)
 
 Z = np.reshape(Z_mat, N)
@@ -227,15 +227,15 @@ while compt < nb_it:
 
     Z_gradx, Z_grady = grad(Z_appr)
     corr = np.sqrt(1 + Z_gradx**2 + Z_grady**2)
-    E = E_cp * corr - gamma - CB
+    E = E_cp * corr - gamma
 
-    # for i in range(ny):
-    #     E[i] = 0
-    #     E[-(i + 1)] = 0
+    for i in range(ny):
+        E[i] = 0
+        E[-(i + 1)] = 0
 
-    # for j in range(nx):
-    #     E[j * ny] = 0
-    #     E[(j + 1) * ny - 1] = 0
+    for j in range(nx):
+        E[j * ny] = 0
+        E[(j + 1) * ny - 1] = 0
 
     Z_appr = spsolve(M.T.dot(M), M.T.dot(E).T)
 
