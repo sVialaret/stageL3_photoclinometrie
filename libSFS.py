@@ -124,7 +124,7 @@ def eclairement(Z, lV, grad):
     """
 
     gradZx, gradZy = grad(Z)
-    E = (lV[2] + lV[0] * gradZx + lV[1] * gradZy) / (1 + gradZx ** 2 + gradZy ** 2)
+    E = (lV[2] + lV[0] * gradZx + lV[1] * gradZy) / np.sqrt(1 + gradZx ** 2 + gradZy ** 2)
     # E = (lV[2] + lV[0]*gradZx +lV[1]*gradZy)
     
     return E
@@ -141,3 +141,19 @@ def comparer_eclairement(E1, E2):
     N_uni = np.max(np.abs(E1 - E2)) / np.max(np.abs(E1))
 
     return N1, N2, N_uni
+    
+def points_critiques(E):
+    """
+        renvoie la liste des coordonnées des points critiques associés à la carte d'éclairement E 
+    """
+    (nx,ny)=E.shape
+    P=[]
+    for i in range(1,nx-1):
+        for j in range(1,ny-1):
+            if E[i,j]==1:
+                P.append([i,j])
+    return np.array(P)
+    
+
+
+
