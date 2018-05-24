@@ -161,3 +161,18 @@ def bruit_selpoivre(I, freq):
     I[indexP] = 0
     I[indexS] = 1
     return I
+
+def simul_camera(I, (nx, ny), patch):
+
+    I_mat = np.reshape(I, (nx, ny))
+
+    for i in range(nx // patch):
+        for j in range(ny // patch):
+            m = np.sum(I_mat[patch*i:patch*(i+1), patch*j:patch*(j+1)]) / (patch **2)
+            # print(I_mat[patch*i:patch*(i+1), patch*j:patch*(j+1)])
+            # print(patch**2)
+            # print(m)
+            for k in range(patch):
+                for l in range(patch):
+                    I_mat[patch * i + k, patch*j + l] = m
+    return np.reshape(I_mat, nx*ny)
