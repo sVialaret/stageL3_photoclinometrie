@@ -30,6 +30,7 @@ Z=generer_surface(Nx=nx, Ny=ny, forme=('trap',60,20,20,10), reg = 0)
 V=sum(sum(Z))
 I=eclairement(Z,lV,np.gradient)
 nb=100 # nombre d'itérations nécessaires pour déterminer la surface
+m=5
 delta=0.01 # précision de la méthode
 
 def g(a,b,c,d): # gradient
@@ -62,8 +63,6 @@ def h(x,y):
             H+=n[i+x,y]
     return H
     
-t1=clock()
-    
 n=np.zeros((nx,ny)) # n(x,y) est la fonction qui est égale à la norme du gradient
 for x in range(1,nx-1):
     for y in range(1,ny-1):
@@ -72,11 +71,7 @@ for x in range(1,nx-1):
 z0=np.zeros((nx,ny))
 z=np.zeros((nx,ny))
 
-Q=np.zeros((nx,ny))
-for x in range(0,nx):
-    for y in range(0,ny):
-        if I[x,y]==1:
-            Q[x,y]=1
+Q=points_critiques(I)
 
 z0[:,0]=CB[0] # on impose les conditions de bord a priori
 z0[:,ny-1]=CB[1]
@@ -87,18 +82,6 @@ z[:,ny-1]=CB[1]
 z[0,:]=CB[2]
 z[ny-1,:]=CB[3]
 
-# for x in range(1,nx-1): # pour le trapzoïde (60,20,20,10)
-#     for y in range(1,ny-1):
-#         if Q[x,y]==1 and y>20 and y<105 and x>50 and x<80:
-#             z0[x,y]=10 # fait partie des "conditions de bord"
-#             z[x,y]=10
-
-# for x in range(1,nx-1): # pour le cône
-#     for y in range(1,ny-1):
-#         if Q[x,y]==1 and x>nx/2-10 and x<nx/2+10 and y>ny/2-10 and y<ny/2+10:
-#             z0[x,y]=50 # fait partie des "conditions de bord"
-#             z[x,y]=50
-
 for x in range(nx):
     for y in range(ny):
         if Q[x,y]==1:
@@ -106,7 +89,8 @@ for x in range(nx):
             z[x,y]=z0[x,y]
 
 for i in range(nb):
-
+    if i==0:
+        t1=clock()
     for x in range(1,nx-1):
         for y in range(1,ny-1):
             if Q[x,y]==0:
@@ -116,9 +100,9 @@ for i in range(nb):
         for y in range(1,ny-1):
             if Q[x,y]==0:
                 z0[x,y]=z[x,y]
-                
-t2=clock()
-print(t2-t1)
+    if i==m:
+        t2=clock()
+        print((t2-t1)*nb/m)
 
 fig = plt.figure(17)
 ax = fig.gca(projection='3d')
@@ -135,7 +119,10 @@ plt.figure(4)
 plt.imshow(eclairement(z,lV,np.gradient))
 plt.figure(5)
 plt.imshow(Q)
+F=frontiere(Q)
+plt.figure(6)
+plt.imshow(F)
 
 V=np.sum(Z)
 v=np.sum(z)
-print((v-V)/V)
+print(abs(v-V)/V)
