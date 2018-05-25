@@ -2,6 +2,7 @@
 
 import numpy as np
 from scipy.signal import convolve2d
+from copy import deepcopy
 
 def direction_eclairement(angLum, angObs):
 
@@ -144,16 +145,93 @@ def comparer_eclairement(E1, E2):
     
 def points_critiques(E):
     """
-        renvoie la liste des coordonnées des points critiques associés à la carte d'éclairement E 
+        renvoie un tableau de bouléens qui indiquent les points critiques associés à la carte d'éclairement E 
     """
     (nx,ny)=E.shape
-    P=[]
+    P=np.zeros((nx,ny))
     for i in range(1,nx-1):
         for j in range(1,ny-1):
             if E[i,j]==1:
-                P.append([i,j])
-    return np.array(P)
+                P[i,j]=1
+    return P
     
-
-
-
+def comp_connexes(P):
+    """
+        renvoie la liste des composantes connexes de {(x,y)|P[x,y]=1}
+    """
+    R=deepcopy(P)
+    Q=[]
+    L=[]
+    (nx,ny)=R.shape
+    for i in range(nx):
+        for j in range(ny):
+            if R[i,j]==1:
+                L.append([i,j])
+    h=0
+    while len(L)>0:
+        C=[]
+        (x,y)=L[0]
+        while (frontiere(C)>frontiere(R)).any():
+            
+        for (i,j) in Q[h]:
+            R[i,j]=0
+        L=[]
+        for i in range(nx):
+            for j in range(ny):
+                if R[i,j]==1:
+                    L.append([i,j])
+        h+=1
+    return np.array(Q)
+    
+def frontiere(Q):
+    """
+        renvoie les coordonnées des points de la frontière de Q
+    """
+    L=[]
+    (nx,ny)=Q.shape
+    for i in range(nx):
+        for j in range(ny):
+            if Q[i,j]==1:
+                L.append([i,j])
+    F=[]
+    for i in range(nx):
+        for j in range(ny):
+            if ([i,j] not in L) and ([i-1,j] in L or [i-1,j-1] in L or [i,j-1] in L or [i+1,j-1] in L or [i+1,j] in L or [i+1,j+1] in L or [i,j+1] in L or [i-1,j+1] in L):
+                F.append([i,j])
+    G=np.zeros((nx,ny))
+    for i in range(nx):
+        for j in range(ny):
+            if [i,j] in F:
+                G[i,j]=1
+    return G
+    
+def voisinage(P,Q,x,y):
+    """
+        ajoute à Q les points voisins de [x,y] qui appartiennent à P
+    """
+    (nx,ny)=P.shape
+    if x>0 and P[x-1,y]==1 and [x-1,y] not in Q:
+        Q.append([x-1,y])
+        Q=voisinage(P,Q,x-1,y)
+    if x>0 and y>0 and P[x-1,y-1]==1 and [x-1,y-1] not in Q:
+        Q.append([x-1,y-1])
+        Q=voisinage(P,Q,x-1,y)
+    if y>0 and P[x,y-1]==1 and [x,y-1] not in Q:
+        Q.append([x,y-1])
+        Q=voisinage(P,Q,x,y-1)
+    if x<nx-1 and y>0 and P[x+1,y-1]==1 and [x+1,y-1] not in Q:
+        Q.append([x+1,y-1])
+        Q=voisinage(P,Q,x+1,y-1)
+    if x<nx-1 and P[x+1,y]==1 and [x+1,y] not in Q:
+        Q.append([x+1,y])
+        Q=voisinage(P,Q,x+1,y)
+    if x<nx-1 and y<ny-1 and P[x+1,y+1]==1 and [x+1,y+1] not in Q:
+        Q.append([x+1,y+1])
+        Q=voisinage(P,Q,x+1,y+1)
+    if y<ny-1 and P[x,y+1]==1 and [x,y+1] not in Q:
+        Q.append([x,y+1])
+        Q=voisinage(P,Q,x,y+1)
+    if x>0 and y<ny-1 and P[x-1,y+1]==1 and [x-1,y+1] not in Q:
+        Q.append([x-1,y+1])
+        Q=voisinage(P,Q,x-1,y+1)
+    return Q
