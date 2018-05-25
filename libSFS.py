@@ -67,6 +67,7 @@ def generer_surface(Nx=64, Ny=64, forme=('plateau', 16, 16, 1), reg=0):
             raise ValueError('Surface trop large')
 
         rb = r
+
         ru = rb * (H - h) / H
         Z_tmp = np.zeros((Nx, Ny))
 
