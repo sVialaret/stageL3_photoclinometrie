@@ -4,6 +4,7 @@ import numpy as np
 import numpy.random as rand
 from scipy.signal import convolve2d
 from copy import deepcopy
+import scipy.sparse as sp
 
 
 def direction_eclairement(angLum, angObs):
@@ -41,8 +42,8 @@ def generer_surface(Nx=64, Ny=64, forme=('plateau', 16, 16, 1), reg=0):
 
     # Generation de la surface
 
-    xt = np.linspace(-Nx / 2, Nx / 2 - 1, Nx)
-    yt = np.linspace(-Ny / 2, Ny / 2 - 1, Ny)
+    xt = np.linspace(-Nx // 2, Nx // 2 - 1, Nx)
+    yt = np.linspace(-Ny // 2, Ny // 2 - 1, Ny)
     X, Y = np.meshgrid(yt, xt)
     Z = np.zeros((Nx, Ny))
 
@@ -74,17 +75,17 @@ def generer_surface(Nx=64, Ny=64, forme=('plateau', 16, 16, 1), reg=0):
 
         Z = H * (rb - ((X + L / 2)**2 + Y**2)**.5) / rb
         Z = Z * (Z > 0)
-        Z[:, Ny / 2 - L / 2:] = 0
+        Z[:, Ny // 2 - L // 2:] = 0
         Z_tmp = H * (rb - ((X - L / 2)**2 + Y**2)**.5) / rb
         Z_tmp = Z_tmp * (Z_tmp > 0)
-        Z_tmp[:, :Ny / 2 + L / 2] = 0
+        Z_tmp[:, :Ny // 2 + L // 2] = 0
 
         Z = Z + Z_tmp
 
-        Z[Nx / 2:Nx / 2 + rb, Ny / 2 - L / 2:Ny / 2 + L / 2] = H * \
-            (rb - Y[Nx / 2:Nx / 2 + rb, Ny / 2 - L / 2:Ny / 2 + L / 2]) / rb
-        Z[Nx / 2 - rb:Nx / 2, Ny / 2 - L / 2:Ny / 2 + L / 2] = H * \
-            (Y[Nx / 2:Nx / 2 + rb, Ny / 2 - L / 2:Ny / 2 + L / 2]) / rb
+        Z[Nx // 2:Nx // 2 + rb, Ny // 2 - L // 2:Ny // 2 + L // 2] = H * \
+            (rb - Y[Nx // 2:Nx // 2 + rb, Ny // 2 - L // 2:Ny // 2 + L // 2]) / rb
+        Z[Nx // 2 - rb:Nx // 2, Ny // 2 - L // 2:Ny // 2 + L // 2] = H * \
+            (Y[Nx // 2:Nx // 2 + rb, Ny // 2 - L // 2:Ny // 2 + L // 2]) / rb
 
         Z = Z - (Z - h) * (Z >= h)
 
@@ -97,11 +98,11 @@ def generer_surface(Nx=64, Ny=64, forme=('plateau', 16, 16, 1), reg=0):
             raise ValueError('Surface trop large')
         # Z = H*np.exp(-(1/(sigx**2-X**2))-(1/(sigy**2-Y**2)))*T
 
-        Z[Nx / 2 - sigx + 1:Nx / 2 + sigx - 1, Ny / 2 - sigy + 1:Ny / 2 + sigy - 1] = H * np.exp(-(1 / (sigx**2 - X[Nx / 2 - sigx + 1:Nx / 2 + sigx - 1, Ny / 2 - sigy + 1:Ny / 2 + sigy - 1]**2)) - (
-            1 / (sigy**2 - Y[Nx / 2 - sigx + 1:Nx / 2 + sigx - 1, Ny / 2 - sigy + 1:Ny / 2 + sigy - 1]**2)))
+        Z[Nx // 2 - sigx + 1:Nx // 2 + sigx - 1, Ny // 2 - sigy + 1:Ny // 2 + sigy - 1] = H * np.exp(-(1 / (sigx**2 - X[Nx // 2 - sigx + 1:Nx // 2 + sigx - 1, Ny // 2 - sigy + 1:Ny // 2 + sigy - 1]**2)) - (
+            1 / (sigy**2 - Y[Nx // 2 - sigx + 1:Nx // 2 + sigx - 1, Ny // 2 - sigy + 1:Ny // 2 + sigy - 1]**2)))
 
-        Z_trou[Nx / 2 - k * sigx + 1:Nx / 2 + k * sigx - 1, Ny / 2 - k * sigy + 1:Ny / 2 + k * sigy - 1] = p * np.exp(-(1 / ((k * sigx)**2 - X[Nx / 2 - k * sigx + 1:Nx / 2 + k * sigx - 1, Ny / 2 - k * sigy + 1:Ny / 2 + k * sigy - 1]**2)) - (
-            1 / ((k * sigy)**2 - Y[Nx / 2 - k * sigx + 1:Nx / 2 + k * sigx - 1, Ny / 2 - k * sigy + 1:Ny / 2 + k * sigy - 1]**2)))
+        Z_trou[Nx // 2 - int(k * sigx) + 1:Nx // 2 + int(k * sigx) - 1, Ny // 2 - int(k * sigy) + 1:Ny // 2 + int(k * sigy) - 1] = p * np.exp(-(1 / (int(k * sigx)**2 - X[Nx // 2 - int(k * sigx) + 1:Nx // 2 + int(k * sigx) - 1, Ny // 2 - int(k * sigy) + 1:Ny // 2 + int(k * sigy) - 1]**2)) - (
+            1 / (int(k * sigy)**2 - Y[Nx // 2 - int(k * sigx) + 1:Nx // 2 + int(k * sigx) - 1, Ny // 2 - int(k * sigy) + 1:Ny // 2 + int(k * sigy) - 1]**2)))
 
         # Z_trou = p*np.exp(-(1/((k*sigx)**2-X**2))-(1/((k*sigy)**2-Y**2)))*Tk
         Z = Z - Z_trou
@@ -163,20 +164,20 @@ def bruit_selpoivre(I, freq):
     I[indexS] = 1
     return I
 
-def simul_camera(I, (nx, ny), patch):
-
-    I_mat = np.reshape(I, (nx, ny))
-
-    for i in range(nx // patch):
-        for j in range(ny // patch):
-            m = np.sum(I_mat[patch*i:patch*(i+1), patch*j:patch*(j+1)]) / (patch **2)
-            # print(I_mat[patch*i:patch*(i+1), patch*j:patch*(j+1)])
-            # print(patch**2)
-            # print(m)
-            for k in range(patch):
-                for l in range(patch):
-                    I_mat[patch * i + k, patch*j + l] = m
-    return np.reshape(I_mat, nx*ny)
+# def simul_camera(I, (nx, ny), patch):
+#     
+#     I_mat = np.reshape(I, (nx, ny))
+# 
+#     for i in range(nx // patch):
+#         for j in range(ny // patch):
+#             m = np.sum(I_mat[patch*i:patch*(i+1), patch*j:patch*(j+1)]) / (patch **2)
+#             # print(I_mat[patch*i:patch*(i+1), patch*j:patch*(j+1)])
+#             # print(patch**2)
+#             # print(m)
+#             for k in range(patch):
+#                 for l in range(patch):
+#                     I_mat[patch * i + k, patch*j + l] = m
+#     return np.reshape(I_mat, nx*ny)
 
     
 def points_critiques(E):
@@ -187,7 +188,7 @@ def points_critiques(E):
     P=np.zeros((nx,ny))
     for i in range(1,nx-1):
         for j in range(1,ny-1):
-            if E[i,j]==1:
+            if (1-E[i,j])<0.001:
                 P[i,j]=1
     return P
     
@@ -205,12 +206,26 @@ def comp_connexes(P):
                 L.append([i,j])
     h=0
     while len(L)>0:
-        C=[]
+        C0=np.zeros((nx,ny))
+        C=np.zeros((nx,ny))
         (x,y)=L[0]
+        C[x,y]=1
         while (frontiere(C)>frontiere(R)).any():
-            
-        for (i,j) in Q[h]:
-            R[i,j]=0
+            S=C-C0
+            C0=deepcopy(C)
+            M=[]
+            (nx,ny)=R.shape
+            for i in range(nx):
+                for j in range(ny):
+                    if S[i,j]==1:
+                        M.append([i,j])
+            for (x,y) in M:
+                C=voisinage(R,C,x,y)
+        Q.append(C)
+        for i in range(nx):
+            for j in range(ny):
+                if Q[h][i,j]==1:
+                    R[i,j]=0
         L=[]
         for i in range(nx):
             for j in range(ny):
@@ -219,55 +234,176 @@ def comp_connexes(P):
         h+=1
     return np.array(Q)
     
-def frontiere(Q):
+def frontiere(K):
     """
-        renvoie les coordonnées des points de la frontière de Q
+        renvoie la carte de la frontière de K
     """
-    L=[]
-    (nx,ny)=Q.shape
-    for i in range(nx):
-        for j in range(ny):
-            if Q[i,j]==1:
-                L.append([i,j])
-    F=[]
-    for i in range(nx):
-        for j in range(ny):
-            if ([i,j] not in L) and ([i-1,j] in L or [i-1,j-1] in L or [i,j-1] in L or [i+1,j-1] in L or [i+1,j] in L or [i+1,j+1] in L or [i,j+1] in L or [i-1,j+1] in L):
-                F.append([i,j])
-    G=np.zeros((nx,ny))
-    for i in range(nx):
-        for j in range(ny):
-            if [i,j] in F:
-                G[i,j]=1
-    return G
+    (nx,ny)=K.shape
     
-def voisinage(P,Q,x,y):
+    Dx1 = sp.lil_matrix((nx, nx))
+    Dx1.setdiag(-1)
+    Dx1.setdiag(1,1)
+    Dx1 = Dx1.toarray()
+    
+    Dx2 = sp.lil_matrix((nx, nx))
+    Dx2.setdiag(1)
+    Dx2.setdiag(-1,-1)
+    Dx2 = Dx2.toarray()
+    
+    Dy1 = sp.lil_matrix((ny, ny))
+    Dy1.setdiag(-1)
+    Dy1.setdiag(1,1)
+    Dy1 = Dy1.toarray()
+    
+    Dy2 = sp.lil_matrix((ny, ny))
+    Dy2.setdiag(1)
+    Dy2.setdiag(-1,-1)
+    Dy2 = Dy2.toarray()
+    
+    U1=(np.dot(Dx1,K)>0)
+    U2=(np.dot(Dx2,K)<0)
+    
+    V1=(np.dot(K,Dy1)>0)
+    V2=(np.dot(K,Dy2)<0)
+    
+    return U1+U2+V1+V2
+    
+def voisinage(P,C,x,y):
     """
-        ajoute à Q les points voisins de [x,y] qui appartiennent à P
+        ajoute à C les points voisins de [x,y] qui appartiennent à P
     """
     (nx,ny)=P.shape
-    if x>0 and P[x-1,y]==1 and [x-1,y] not in Q:
-        Q.append([x-1,y])
-        Q=voisinage(P,Q,x-1,y)
-    if x>0 and y>0 and P[x-1,y-1]==1 and [x-1,y-1] not in Q:
-        Q.append([x-1,y-1])
-        Q=voisinage(P,Q,x-1,y)
-    if y>0 and P[x,y-1]==1 and [x,y-1] not in Q:
-        Q.append([x,y-1])
-        Q=voisinage(P,Q,x,y-1)
-    if x<nx-1 and y>0 and P[x+1,y-1]==1 and [x+1,y-1] not in Q:
-        Q.append([x+1,y-1])
-        Q=voisinage(P,Q,x+1,y-1)
-    if x<nx-1 and P[x+1,y]==1 and [x+1,y] not in Q:
-        Q.append([x+1,y])
-        Q=voisinage(P,Q,x+1,y)
-    if x<nx-1 and y<ny-1 and P[x+1,y+1]==1 and [x+1,y+1] not in Q:
-        Q.append([x+1,y+1])
-        Q=voisinage(P,Q,x+1,y+1)
-    if y<ny-1 and P[x,y+1]==1 and [x,y+1] not in Q:
-        Q.append([x,y+1])
-        Q=voisinage(P,Q,x,y+1)
-    if x>0 and y<ny-1 and P[x-1,y+1]==1 and [x-1,y+1] not in Q:
-        Q.append([x-1,y+1])
-        Q=voisinage(P,Q,x-1,y+1)
-    return Q
+    i=x
+    while i>0 and P[i-1,y]==1 and C[i-1,y]==0:
+        C[i-1,y]=1
+        i=i-1
+    j=y
+    while j>0 and P[x,j-1]==1 and C[x,j-1]==0:
+        C[x,j-1]=1
+        j=j-1
+    i=x
+    while i<nx-1 and P[i+1,y]==1 and C[i+1,y]==0:
+        C[i+1,y]=1
+        i=i+1
+    j=y
+    while j<ny-1 and P[x,j+1]==1 and C[x,j+1]==0:
+        C[x,j+1]=1
+        j=j+1
+    return C
+    
+def rearrange(CC):
+    """
+        classe les composantes connexes par ordre de proximité au bord
+    """
+    D=[]
+    (nx,ny)=CC[0].shape
+    C=np.zeros((len(CC),nx,ny))
+    for i in range(len(CC)):
+        L=[]
+        F=frontiere(CC[i])
+        for x in range(nx):
+            for y in range(ny):
+                if F[x,y]:
+                    L.append([x,y])
+        l=[]
+        for (x,y) in L:
+            l.append(x)
+            l.append(nx-x)
+            l.append(y)
+            l.append(ny-y)
+        D.append(min(l))
+    for i in range(len(CC)):
+        B=max(D)+1
+        j=np.argmin(D)
+        D[j]=B
+        C[i]=CC[j]
+    return C
+    
+def h(x,y,c,Q,V,CC,n,CB,P,p):
+    """
+        calcule la hauteur du point (x,y)
+    """
+    (nx,ny)=CC[0].shape
+    M=0
+    i=x
+    j=y
+    if c==0:
+        while Q[x,j]==0 and j>0:
+            M+=n[x,j]
+            j=j-1
+        if j==0:
+            M+=CB[0,x]
+        else:
+            k=0
+            while CC[k,x,j]==0:
+                k=k+1
+            M-=V[k]*P[k]
+    elif c==1:
+        while Q[x,j]==0 and j<ny-1:
+            M+=n[x,j]
+            j=j+1
+        if j==ny-1:
+            M+=CB[1,x]
+        else:
+            k=0
+            while CC[k,x,j]==0:
+                k=k+1
+            M-=V[k]*P[k]
+    elif c==2:
+        while Q[i,y]==0 and i>0:
+            M+=n[i,y]
+            i=i-1
+        if i==0:
+            M+=CB[2,y]
+        else:
+            k=0
+            while CC[k,i,y]==0:
+                k=k+1
+            M-=V[k]*P[k]
+    else:
+        while Q[i,y]==0 and i<nx-1:
+            M+=n[i,y]
+            i=i+1
+        if i==nx-1:
+            M+=CB[3,y]
+        else:
+            k=0
+            while CC[k,i,y]==0:
+                k=k+1
+            M-=V[k]*P[k]
+    return p*M
+    
+    
+def height(i,Q,V,CC,n,CB,P):
+    """
+        calcule la hauteur de l'ensemble CC[i]
+    """
+    p=P[i]
+    K=CC[i]
+    (nx,ny)=K.shape
+    F=frontiere(K)
+    L=[]
+    H=[]
+    R=deepcopy(Q)
+    for j in range(i):
+        for x in range(nx):
+            for y in range(ny):
+                if CC[j,x,y]:
+                    R[x,y]=0
+    for x in range(nx):
+        for y in range(ny):
+            if F[x,y]:
+                L.append([x,y])
+    for (x,y) in L:
+        if (R[x,0:y]==np.zeros(y)).all():
+            H.append(h(x,y,0,Q,V,CC,n,CB,P,p))
+        if (R[x,y:ny]==np.zeros(ny-y)).all():
+            H.append(h(x,y,1,Q,V,CC,n,CB,P,p))
+        if (R[0:x,y]==np.zeros(x)).all():
+            H.append(h(x,y,2,Q,V,CC,n,CB,P,p))
+        if (R[x:nx,y]==np.zeros(nx-x)).all():
+            H.append(h(x,y,3,Q,V,CC,n,CB,P,p))
+    if p==1:
+        return min(H)
+    else:
+        return max(H)
