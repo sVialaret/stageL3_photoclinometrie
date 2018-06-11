@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+import os
+os.chdir("/home/rosaell/Documents/2017_2018/Stage/stageL3_photoclinometrie")
+
 import scipy.sparse as sp
 from scipy.sparse.linalg import spsolve, eigs, norm
 import numpy as np
@@ -11,6 +14,9 @@ from numpy.linalg import solve
 
 nx = 126
 ny = 200
+
+# nx = 150
+# ny = 150
 N = nx * ny
 
 theta = np.pi / 3
@@ -20,7 +26,7 @@ phi_obs = 0
 lV = direction_eclairement((theta, phi), (theta_obs, phi_obs))
 alpha, beta, gamma = lV
 
-eps = 5
+eps = 0.1
 
 dx = 1
 dy = 1
@@ -92,7 +98,7 @@ def grad(U): return (Dx.dot(U), Dy.dot(U))
 # # Z_mat = generer_surface(Nx=nx, Ny=ny, forme=('volcan',50,50,0.5,0.2,0.5), reg = 0)
 # # Z_mat = generer_surface(Nx=nx, Ny=ny, forme=('trap',30,100,1,0.5), reg=0)
 # Z_mat = generer_surface(Nx=nx, Ny=ny, forme=('cone', 50, 10), reg=0)
-# # Z_mat = generer_surface(Nx=nx, Ny=ny, forme=('plateau',20,20,1), reg = 0)
+# Z_mat = generer_surface(Nx=nx, Ny=ny, forme=('plateau',20,20,1), reg = 0)
 
 
 
@@ -111,9 +117,11 @@ def grad(U): return (Dx.dot(U), Dy.dot(U))
 # V = np.sum(Z)
 
 E_cp_mat = io.imread('img/1/non_sym.png', 'L')
+# E_cp_mat = io.imread('img/2/cone.png', 'L')
 E_cp_mat = (E_cp_mat - np.min(E_cp_mat))/(np.max(E_cp_mat) - np.min(E_cp_mat))
 
 mask = io.imread('img/1/non_sym_mask.png', 'L')
+# mask = io.imread('img/2/cone_mask.png', 'L')
 mask = 1 - (mask - np.min(mask))/(np.max(mask) - np.min(mask))
 
 E_cp_mat = E_cp_mat * mask
@@ -131,12 +139,12 @@ compt = 0
 Z_appr = np.zeros(N)
 # Z_appr = Z
 
-plt.figure(-5)
-plt.imshow(E_cp_mat, cmap='gray')
+# plt.figure(-5)
+# plt.imshow(E_cp_mat, cmap='gray')
 
 while compt < nb_it:
-	eps = eps * 0.7
-	M = alpha * Dx + beta * Dy + eps * Lap
+	# eps = eps * 0.8
+	# M = alpha * Dx + beta * Dy + eps * Lap
 
 	compt += 1
 
@@ -167,8 +175,8 @@ while compt < nb_it:
 	# plt.figure(10 * compt + 2)
 	# plt.imshow(E_appr_mat, cmap='gray')
 
-# plt.figure()
-# plt.imshow(np.abs(E_appr_mat - E_cp_mat), cmap='gray', vmin = 0, vmax = 1)
+	# plt.figure()
+	# plt.imshow(np.abs(E_appr_mat - E_cp_mat), cmap='gray', vmin = 0, vmax = 1)
 
 	print(comparer_eclairement(E_cp, E_appr))
 	print(compt)
@@ -178,6 +186,12 @@ while compt < nb_it:
 
 fig = plt.figure(10 * compt)
 ax = fig.gca(projection='3d')
-ax.plot_surface(X, Y, Z_appr_mat, rstride=5, cstride=5, linewidth=1)
+ax.plot_surface(X, Y, Z_appr_mat * (Z_appr_mat >= 0), rstride=5, cstride=5, linewidth=1)
+
+plt.figure(10 * compt + 2)
+plt.imshow(E_cp_mat, cmap='gray')
+
+# plt.figure(999)
+# plt.imshow(Z_appr_mat, cmap='gray')
 
 plt.show()

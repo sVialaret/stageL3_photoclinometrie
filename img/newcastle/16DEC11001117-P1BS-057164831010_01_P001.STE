@@ -1,0 +1,17 @@
+numPair = 1;
+BEGIN_GROUP = STEREO_PAIR_1
+	firstId = "16DEC11001014-P1BS-057164831010_01_P001.TIF";
+	secondId = "16DEC11001117-P1BS-057164831010_01_P001.TIF";
+	overlap =  0.806;
+	ULLat = -32.841270;
+	ULLon = 151.712677;
+	LRLat = -32.914826;
+	LRLon = 151.886883;
+	B_Conv =  38.21;
+	E_Conv =  38.28;
+	B_Asym =   5.75;
+	E_Asym =   5.78;
+	B_BIE =  65.95;
+	E_BIE =  65.78;
+END_GROUP = STEREO_PAIR_1
+END;

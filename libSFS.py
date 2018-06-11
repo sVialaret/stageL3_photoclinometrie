@@ -182,13 +182,13 @@ def bruit_selpoivre(I, freq):
     
 def points_critiques(E):
     """
-        renvoie un tableau de bouléens qui indiquent les points critiques associés à la carte d'éclairement E 
+        renvoie un tableau de booléens qui indiquent les points critiques associés à la carte d'éclairement E
     """
     (nx,ny)=E.shape
     P=np.zeros((nx,ny))
     for i in range(1,nx-1):
         for j in range(1,ny-1):
-            if (1-E[i,j])<0.001:
+            if abs(E[i,j]-1) < 0.0001:
                 P[i,j]=1
     return P
     
@@ -221,17 +221,16 @@ def comp_connexes(P):
                         M.append([i,j])
             for (x,y) in M:
                 C=voisinage(R,C,x,y)
-        Q.append(C)
-        for i in range(nx):
-            for j in range(ny):
-                if Q[h][i,j]==1:
-                    R[i,j]=0
-        L=[]
-        for i in range(nx):
-            for j in range(ny):
-                if R[i,j]==1:
-                    L.append([i,j])
-        h+=1
+            Q.append(C)
+               
+            for (i,j) in Q[h]:
+                R[i,j]=0
+            L=[]
+            for i in range(nx):
+                for j in range(ny):
+                    if R[i,j]==1:
+                        L.append([i,j])
+            h+=1
     return np.array(Q)
     
 def frontiere(K):
