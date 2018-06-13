@@ -295,6 +295,8 @@ def rearrange(CC):
     """
         classe les composantes connexes par ordre de proximité au bord
     """
+    if len(CC)==0:
+        return CC
     D=[]
     (nx,ny)=CC[0].shape
     C=np.zeros((len(CC),nx,ny))
@@ -332,7 +334,7 @@ def h(x,y,c,Q,V,CC,n,CB,P,p):
             M+=n[x,j]
             j=j-1
         if j==0:
-            M+=CB[0,x]
+            M+=CB[0][x]
         else:
             k=0
             while CC[k,x,j]==0:
@@ -343,7 +345,7 @@ def h(x,y,c,Q,V,CC,n,CB,P,p):
             M+=n[x,j]
             j=j+1
         if j==ny-1:
-            M+=CB[1,x]
+            M+=CB[1][x]
         else:
             k=0
             while CC[k,x,j]==0:
@@ -354,7 +356,7 @@ def h(x,y,c,Q,V,CC,n,CB,P,p):
             M+=n[i,y]
             i=i-1
         if i==0:
-            M+=CB[2,y]
+            M+=CB[2][y]
         else:
             k=0
             while CC[k,i,y]==0:
@@ -365,7 +367,7 @@ def h(x,y,c,Q,V,CC,n,CB,P,p):
             M+=n[i,y]
             i=i+1
         if i==nx-1:
-            M+=CB[3,y]
+            M+=CB[3][y]
         else:
             k=0
             while CC[k,i,y]==0:
