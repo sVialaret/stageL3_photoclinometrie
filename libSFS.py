@@ -406,3 +406,12 @@ def height(i,Q,V,CC,n,CB,P):
         return min(H)
     else:
         return max(H)
+
+
+def rotation(Z, theta):
+    """
+        rotation d'angle theta autour de l'axe e_x
+    """
+    nx, ny = Z.shape
+    nx_new, ny_new = int(nx * (1 - np.cos(theta))), int(ny * (1 - np.cos(theta)))
+    

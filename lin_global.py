@@ -15,12 +15,16 @@ from numpy.linalg import solve
 nx = 126
 ny = 200
 
-# nx = 150
-# ny = 150
+# nx = 128
+# ny = 128
 N = nx * ny
 
 theta = np.pi / 3
 phi = np.pi / 2.7
+
+# theta = np.pi / 8
+# phi = np.pi / 4
+
 theta_obs = 0
 phi_obs = 0
 lV = direction_eclairement((theta, phi), (theta_obs, phi_obs))
@@ -37,7 +41,7 @@ nb_it = 10
 
 x = np.linspace(0, np.pi, nx)
 y = np.linspace(0, np.pi, ny)
-X, Y = np.meshgrid(y, x)
+X, Y = np.meshgrid(x, y)
 
 Dx_ii = sp.lil_matrix((ny, ny))
 Dx_ii.setdiag(-1.0 / dx)
@@ -98,17 +102,17 @@ def grad(U): return (Dx.dot(U), Dy.dot(U))
 # # Z_mat = generer_surface(Nx=nx, Ny=ny, forme=('volcan',50,50,0.5,0.2,0.5), reg = 0)
 # # Z_mat = generer_surface(Nx=nx, Ny=ny, forme=('trap',30,100,1,0.5), reg=0)
 # Z_mat = generer_surface(Nx=nx, Ny=ny, forme=('cone', 50, 10), reg=0)
-# Z_mat = generer_surface(Nx=nx, Ny=ny, forme=('plateau',20,20,1), reg = 0)
+# # Z_mat = generer_surface(Nx=nx, Ny=ny, forme=('plateau',20,20,1), reg = 0)
 
 
 
 # Z = np.reshape(Z_mat, N)
 
 # E = eclairement(Z, lV, grad)
-# E = bruit_gaussien(E, 0.2)
+# # E = bruit_gaussien(E, 0.2)
 # # E = bruit_selpoivre(E, 0.01)
 
-# E = simul_camera(E, (nx, ny), 6)
+# # E = simul_camera(E, (nx, ny), 6)
 
 
 # E_cp = E.copy()
@@ -182,11 +186,12 @@ while compt < nb_it:
 	print(compt)
 	# print(np.sum((Z - Z_appr)**2)**.5/np.sum(Z))
 
-# Z_appr_mat = mask * Z_appr_mat
+Z_appr_mat = mask * Z_appr_mat
 
 fig = plt.figure(10 * compt)
 ax = fig.gca(projection='3d')
-ax.plot_surface(X, Y, Z_appr_mat * (Z_appr_mat >= 0), rstride=5, cstride=5, linewidth=1)
+# ax.plot_surface(X, Y, Z_appr_mat * (Z_appr_mat >= 0), rstride=5, cstride=5, linewidth=1, alpha=0.7)
+ax.plot_surface(X.T, Y.T, Z_appr_mat, rstride=5, cstride=5, linewidth=1, alpha=0.7)
 
 plt.figure(10 * compt + 2)
 plt.imshow(E_cp_mat, cmap='gray')
