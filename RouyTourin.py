@@ -10,14 +10,47 @@ plt.ion()
 plt.show()
 plt.rcParams["image.cmap"]="gray"
 
-#t1 = clock()
-
 nx = 64
 ny = 64
+
 N = nx * ny
 
-theta = 0
-phi = 0
+## "Compression" de l'image réelle
+
+# nx=nx-nx%3
+# ny=ny-ny%3
+# im1=im1[0:nx,0:ny]
+# im2=im2[0:nx,0:ny]
+# nx=nx//3
+# ny=ny//3
+# IM1=deepcopy(im1)
+# IM2=deepcopy(im2)
+# im1=np.zeros((nx,ny))
+# im2=np.zeros((nx,ny))
+# for i in range(nx):
+#     for j in range(ny):
+#         im1[i,j]=(IM1[3*i,3*j]+IM1[3*i,3*j+1]+IM1[3*i,3*j+2]+IM1[3*i+1,3*j]+IM1[3*i+1,3*j+1]+IM1[3*i+1,3*j+2]+IM1[3*i+2,3*j]+IM1[3*i+2,3*j+1]+IM1[3*i+2,3*j+2])/9
+#         im2[i,j]=(IM2[3*i,3*j]+IM2[3*i,3*j+1]+IM2[3*i,3*j+2]+IM2[3*i+1,3*j]+IM2[3*i+1,3*j+1]+IM2[3*i+1,3*j+2]+IM2[3*i+2,3*j]+IM2[3*i+2,3*j+1]+IM2[3*i+2,3*j+2])/9
+
+## Application du masque à l'image réelle
+
+# for i in range(nx):
+#     for j in range(ny):
+#         if im1[i,j]<1 and im1[i,j]>0:
+#             im1[i,j]=1
+# im2=(1-im1)*im2
+# I=im2/(np.max(im2)-np.min(im2))+im1
+# plt.figure(10)
+# plt.imshow(im1)
+# plt.figure(11)
+# plt.imshow(im2)
+# plt.figure(12)
+# plt.imshow(I)
+
+## Paramètres du problème
+
+theta = 1.1
+phi = np.pi*17/12
 theta_obs = 0
 phi_obs = 0
 lV = direction_eclairement((theta, phi), (theta_obs, phi_obs))
