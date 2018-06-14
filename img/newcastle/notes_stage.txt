@@ -1,0 +1,27 @@
+Ces fichiers proviennent d'un paire d'images satellites sur des raffineries.
+Les images étant de 1.6GB chacune, elles ne sont pas présentes dans le zip
+(vous pouvez nous les demander quand même).
+
+
+Ce que vous avez:
+
+*.JPG : preview à baisse résolution de chacune des images (les tas de charbon
+sont à peine visibles)
+
+*.IMD : données de géo-réferencement, qui spécifient la position géomètrique
+des images, du satellite et du soleil.  Les champs intéressants sont les
+suivants:
+	(ULLon, ULLat) : longitude, latitude du coin supérieur gauche
+	(URLon, URLat) : longitude, latitude du coin supérieur droit
+	(LLLon, LLLat) : longitude, latitude du coin inférieur gauche
+	(LRLon, LRLat) : longitude, latitude du coin inférieur droit
+         XYHAE         : élévation en mètres de chaque coin du plan image
+
+	meanSunAz : azimuth du soleil, vu du centre de l'image
+	meanSunEl : élévation du soleil
+	meanSatAz : azimuth du satellite
+	meanSatEl : élévation du satellite
+
+crop_a.png : c'est la seule présente pour le moment.  Elle a été obtenue en
+prenant un rectangle entre (29294,8808) (32518,11688) de l'image
+16DEC11001117-P1BS-057164831010_01_P001.TIF

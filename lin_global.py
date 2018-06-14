@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+import os
+os.chdir("/home/rosaell/Documents/2017_2018/Stage/stageL3_photoclinometrie")
+
 import scipy.sparse as sp
 from scipy.sparse.linalg import spsolve, eigs, norm
 import numpy as np
@@ -9,18 +12,21 @@ from libSFS import *
 import scipy.misc as io
 from numpy.linalg import solve
 
-nx = 212
-ny = 251
+nx = 126
+ny = 200
+
+# nx = 150
+# ny = 150
 N = nx * ny
 
-theta = np.pi / 4
+theta = np.pi / 3
 phi = np.pi / 2.7
 theta_obs = 0
 phi_obs = 0
 lV = direction_eclairement((theta, phi), (theta_obs, phi_obs))
 alpha, beta, gamma = lV
 
-eps = 5
+eps = 0.1
 
 dx = 1
 dy = 1
@@ -92,17 +98,17 @@ def grad(U): return (Dx.dot(U), Dy.dot(U))
 # # Z_mat = generer_surface(Nx=nx, Ny=ny, forme=('volcan',50,50,0.5,0.2,0.5), reg = 0)
 # # Z_mat = generer_surface(Nx=nx, Ny=ny, forme=('trap',30,100,1,0.5), reg=0)
 # Z_mat = generer_surface(Nx=nx, Ny=ny, forme=('cone', 50, 10), reg=0)
-# # Z_mat = generer_surface(Nx=nx, Ny=ny, forme=('plateau',20,20,1), reg = 0)
+# Z_mat = generer_surface(Nx=nx, Ny=ny, forme=('plateau',20,20,1), reg = 0)
 
 
 
 # Z = np.reshape(Z_mat, N)
 
 # E = eclairement(Z, lV, grad)
-# # E = bruit_gaussien(E, 0.2)
+# E = bruit_gaussien(E, 0.2)
 # # E = bruit_selpoivre(E, 0.01)
 
-# # E = simul_camera(E, (nx, ny), 6)
+# E = simul_camera(E, (nx, ny), 6)
 
 
 # E_cp = E.copy()
@@ -110,26 +116,35 @@ def grad(U): return (Dx.dot(U), Dy.dot(U))
 
 # V = np.sum(Z)
 
-# print(2**.5*np.max(np.abs(E)) / ((alpha + beta + (2*eps/(np.pi/128)))))
-
-E_cp_mat = io.imread('crop.png', 'L')
+E_cp_mat = io.imread('img/1/non_sym.png', 'L')
+# E_cp_mat = io.imread('img/2/cone.png', 'L')
 E_cp_mat = (E_cp_mat - np.min(E_cp_mat))/(np.max(E_cp_mat) - np.min(E_cp_mat))
+
+mask = io.imread('img/1/non_sym_mask.png', 'L')
+# mask = io.imread('img/2/cone_mask.png', 'L')
+mask = 1 - (mask - np.min(mask))/(np.max(mask) - np.min(mask))
+
+E_cp_mat = E_cp_mat * mask
+
+E_cp_mat[np.where(E_cp_mat == 0)] = 0.5
+
+
 E = np.reshape(E_cp_mat, N)
 E_cp = E.copy()
+
+# io.imsave('non_sym_norm.png', E_cp_mat)
 
 compt = 0
 
 Z_appr = np.zeros(N)
 # Z_appr = Z
 
-err_T = []
-
-plt.figure(-5)
-plt.imshow(E_cp_mat, cmap='gray')
+# plt.figure(-5)
+# plt.imshow(E_cp_mat, cmap='gray')
 
 while compt < nb_it:
-	eps = eps * 0.7
-	M = alpha * Dx + beta * Dy + eps * Lap
+	# eps = eps * 0.8
+	# M = alpha * Dx + beta * Dy + eps * Lap
 
 	compt += 1
 
@@ -137,26 +152,19 @@ while compt < nb_it:
 	corr = np.sqrt(1 + Z_gradx**2 + Z_grady**2)
 	E = E_cp * corr - gamma
 
-	# for i in range(ny):
-	#     E[i] = 0
-	#     E[-(i + 1)] = 0
-
-	# for j in range(nx):
-	#     E[j * ny] = 0
-	#     E[(j + 1) * ny - 1] = 0
-	# if compt == 5:
-	# 	M = alpha * Dx + beta * Dy
 	Z_appr = spsolve(M.T.dot(M), M.T.dot(E).T)
-
-	# print(np.max(np.abs(M.T.dot(M).dot(Z_appr)-M.T.dot(E).T)))
 
 	E_appr = eclairement(Z_appr, lV, grad)
 	Z_appr_mat = np.reshape(Z_appr, (nx, ny))
 	E_appr_mat = np.reshape(E_appr, (nx, ny))
 
-	fig = plt.figure(10 * compt)
-	ax = fig.gca(projection='3d')
-	ax.plot_surface(X, Y, Z_appr_mat, rstride=5, cstride=5, linewidth=1)
+	Z_appr_mat = mask * Z_appr_mat
+
+	Z_appr = np.reshape(Z_appr_mat, N)
+
+	# fig = plt.figure(10 * compt)
+	# ax = fig.gca(projection='3d')
+	# ax.plot_surface(X, Y, Z_appr_mat, rstride=5, cstride=5, linewidth=1)
 	# ax.plot_wireframe(X, Y, Z_mat, rstride=5, cstride=5, linewidth=1, color='r')
 
 
@@ -170,13 +178,20 @@ while compt < nb_it:
 	# plt.figure()
 	# plt.imshow(np.abs(E_appr_mat - E_cp_mat), cmap='gray', vmin = 0, vmax = 1)
 
-	# V_appr = np.sum(Z_appr)
-	# err = np.abs(V - V_appr) / V
-	# err_T.append(err)
-
-	# print(comparer_eclairement(E_cp, E_appr))
-	# print(err)
+	print(comparer_eclairement(E_cp, E_appr))
 	print(compt)
 	# print(np.sum((Z - Z_appr)**2)**.5/np.sum(Z))
+
+# Z_appr_mat = mask * Z_appr_mat
+
+fig = plt.figure(10 * compt)
+ax = fig.gca(projection='3d')
+ax.plot_surface(X, Y, Z_appr_mat * (Z_appr_mat >= 0), rstride=5, cstride=5, linewidth=1)
+
+plt.figure(10 * compt + 2)
+plt.imshow(E_cp_mat, cmap='gray')
+
+# plt.figure(999)
+# plt.imshow(Z_appr_mat, cmap='gray')
 
 plt.show()
