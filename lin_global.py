@@ -38,7 +38,6 @@ dy = 1
 nb_it = 10
 
 
-
 x = np.linspace(0, np.pi, nx)
 y = np.linspace(0, np.pi, ny)
 X, Y = np.meshgrid(x, y)
