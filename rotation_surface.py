@@ -56,20 +56,11 @@ def regularisation_maillage(X,Y,Z):
     Z_reg = np.zeros((nx, ny))
     I_reg = np.zeros((nx, ny))
 
-    # print(np.abs(X-X_reg))
-
     for i in range(nx):
         for j in range(ny):
-            distArray = (X_reg - X[i,j]) ** 2 + (Y_reg - Y[i,j]) ** 2 
-            ind = np.unravel_index(np.argmin(distArray, axis = None), (nx,ny))
-            # if (i,j) != ind:
-            #     print(i,j,ind)
-            # print('==============')
-            # print(distArray[i,j])
-            # print(np.min(distArray))
-            # print(np.unravel_index(np.argmin((X_reg - X[i,j]) ** 2 + (Y_reg - Y[i,j]) ** 2, axis=None), (nx,ny)))
-            Z_reg[i,j] = Z[np.unravel_index(np.argmin((X_reg - X[i,j]) ** 2 + (Y_reg - Y[i,j]) ** 2), (nx,ny))]
-            # Z_reg[i,j] = Z[i,j]
+            distArray = (X_reg[i,j] - X) ** 2 + (Y_reg[i,j] - Y) ** 2
+            indX, indY = np.unravel_index(np.argsort(distArray, axis=None), (nx,ny))
+            Z_reg[i,j] = np.sum(Z[indX[:4], indY[:4]]) / 4
     return X_reg, Y_reg, Z_reg
 
 
@@ -104,7 +95,8 @@ print(True in (I < (alpha ** 2 + beta ** 2)**.5))
 Z_mesh = np.array([X,Y,Z])
 Z_rot = rotation_Z(Z_mesh,theta)
 
-# print(np.min(Z_rot[0]))
+# plt.figure()
+# plt.plot(x_mesh, Z_rot[0][35])
 
 
 # I_rot=np.zeros((nx,ny))
@@ -114,7 +106,7 @@ Z_rot = rotation_Z(Z_mesh,theta)
 #         I_rot[Psi(x,y,theta,Z),y]=I[x,y]
 
 
-# print(Z_rot[0][:,30])
+# print(Z_rot[0][30,:])
 
 # Z_retour = rotation_Z(Z_rot,theta)
 
@@ -134,36 +126,14 @@ Z_rot = rotation_Z(Z_mesh,theta)
 
 X_reg, Y_reg, Z_reg = regularisation_maillage(Z_rot[0],Z_rot[1],Z_rot[2])
 
+# print(True in (X == X_reg))
+
 
 fig = plt.figure()
 ax = fig.gca(projection='3d')
 ax.axis('equal')
 # ax.plot_wireframe(X,Y,Z,rstride=2,cstride=2,linewidth=1)
 ax.plot_surface(Z_rot[0],Z_rot[1],Z_rot[2],rstride=2,cstride=2,linewidth=1, color='r')
-# ax.plot_surface(X,Y,Z_rot[2],rstride=2,cstride=2,linewidth=1, color='r')
+ax.plot_wireframe(X_reg, Y_reg, Z_reg,rstride=2,cstride=2,linewidth=1)
 
-fig = plt.figure()
-ax = fig.gca(projection='3d')
-ax.plot_surface(X_reg, Y_reg, Z_reg,rstride=2,cstride=2,linewidth=1, color='r')
-
-
-
-# fig = plt.figure()
-# ax = fig.gca(projection='3d')
-# ax.plot_surface(Z_retour[0],Z_retour[1],Z_retour[2],rstride=2,cstride=2,linewidth=1)
-# ax.plot_wireframe(X, Y, Z, rstride=5, cstride=5, linewidth=1, color='r')
-
-
-# plt.figure()
-# plt.imshow(I)
-# plt.figure(10)
-# plt.imshow(I_rot)
-# plt.figure()
-# plt.imshow(I_retour)
-
-# plt.figure()
-# plt.imshow(np.abs(I - I_rot))
-
-
-# print(np.max(np.abs(I - I_retour)))
-# print(np.max(np.abs(I - I_rot)))
+plt.show()
