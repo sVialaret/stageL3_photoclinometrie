@@ -72,7 +72,7 @@ nx = 64
 ny = 64
 
 theta = np.pi / 10
-phi = 0
+phi = np.pi / 2
 theta_obs = 0
 phi_obs = 0
 lV = direction_eclairement((theta, phi), (theta_obs, phi_obs))
@@ -93,7 +93,7 @@ I=eclairement(Z,lV,np.gradient)
 print(True in (I < (alpha ** 2 + beta ** 2)**.5))
 
 Z_mesh = np.array([X,Y,Z])
-Z_rot = rotation_Z(Z_mesh,theta)
+Z_rot = rotation_Z(Z_mesh, -theta)
 
 # plt.figure()
 # plt.plot(x_mesh, Z_rot[0][35])
@@ -126,6 +126,9 @@ Z_rot = rotation_Z(Z_mesh,theta)
 
 X_reg, Y_reg, Z_reg = regularisation_maillage(Z_rot[0],Z_rot[1],Z_rot[2])
 
+I_rot_vrai = eclairement(Z_reg, (0,0,1), np.gradient)
+I_rot_reg = regularisation_maillage(Z_rot[0],Z_rot[1],I)[2]
+
 # print(True in (X == X_reg))
 
 
@@ -135,5 +138,14 @@ ax.axis('equal')
 # ax.plot_wireframe(X,Y,Z,rstride=2,cstride=2,linewidth=1)
 ax.plot_surface(Z_rot[0],Z_rot[1],Z_rot[2],rstride=2,cstride=2,linewidth=1, color='r')
 ax.plot_wireframe(X_reg, Y_reg, Z_reg,rstride=2,cstride=2,linewidth=1)
+
+plt.figure(10)
+plt.imshow(I)
+
+plt.figure(20)
+plt.imshow(I_rot_vrai)
+
+plt.figure(30)
+plt.imshow(I_rot_reg)
 
 plt.show()
