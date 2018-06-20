@@ -118,31 +118,31 @@ im2=plt.imread("img/3/non_sym.png")[:,:,0]
 
 ## "Compression" de l'image réelle
 
-comp=2 # doit être entier
-
-nx=nx-nx%comp
-ny=ny-ny%comp
-im1=im1[0:nx,0:ny]
-im2=im2[0:nx,0:ny]
-nx=nx//comp
-ny=ny//comp
-IM1=deepcopy(im1)
-IM2=deepcopy(im2)
-im1=np.zeros((nx,ny))
-im2=np.zeros((nx,ny))
-for i in range(nx):
-    for j in range(ny):
-        im1[i,j]=np.sum(IM1[comp*i:comp*(i+1),comp*j:comp*(j+1)])/comp**2
-        im2[i,j]=np.sum(IM2[comp*i:comp*(i+1),comp*j:comp*(j+1)])/comp**2
+# comp=2 # doit être entier
+# 
+# nx=nx-nx%comp
+# ny=ny-ny%comp
+# im1=im1[0:nx,0:ny]
+# im2=im2[0:nx,0:ny]
+# nx=nx//comp
+# ny=ny//comp
+# IM1=deepcopy(im1)
+# IM2=deepcopy(im2)
+# im1=np.zeros((nx,ny))
+# im2=np.zeros((nx,ny))
+# for i in range(nx):
+#     for j in range(ny):
+#         im1[i,j]=np.sum(IM1[comp*i:comp*(i+1),comp*j:comp*(j+1)])/comp**2
+#         im2[i,j]=np.sum(IM2[comp*i:comp*(i+1),comp*j:comp*(j+1)])/comp**2
 
 ## Parametres du probleme
 
-nx = 64
-ny = 100
+# nx = 32
+# ny = 32
 
 delta=0.01
 
-theta = np.pi/8
+theta = np.pi/5.5
 phi = np.pi/2
 theta_obs = 0
 phi_obs = 0
@@ -157,57 +157,57 @@ x_mesh = np.linspace(-(nx-1)/2, (nx-1)/2, nx)
 y_mesh = np.linspace(-(ny-1)/2, (ny-1)/2, ny)
 X,Y = np.meshgrid(y_mesh,x_mesh)
 
-Z = generer_surface(Nx=nx, Ny=ny, forme=('cone',20,10), reg=0)
+# Z = generer_surface(Nx=nx, Ny=ny, forme=('cone',10,5), reg=0)
 # Z = generer_surface(Nx=nx, Ny=ny, forme=('trap',10,20,5,10), reg = 0)
 # Z = generer_surface(Nx=nx, Ny=ny, forme=('plateau',30,30,5), reg = 0)
 
 # V=np.sum(Z)
-I=eclairement(Z,lV,np.gradient)
+# I=eclairement(Z,lV,np.gradient)
 
 ## Application du masque à l'image réelle
-#
-# for i in range(nx):
-#     for j in range(ny):
-#         if im1[i,j]<1 and im1[i,j]>0:
-#             im1[i,j]=1
-# 
-# im2=(1-im1)*im2
-# 
+
+for i in range(nx):
+    for j in range(ny):
+        if im1[i,j]<1 and im1[i,j]>0:
+            im1[i,j]=1
+
+im2=(1-im1)*im2
+
 # im2=im2/np.max(im2)
 
-#im2=((im2-np.min(im2))*(1-np.sqrt(alpha**2+beta**2))/(np.max(im2)-np.min(im2))+np.sqrt(alpha**2+beta**2))*(1-im1)
+im2=((im2-np.min(im2))*(1-np.sqrt(alpha**2+beta**2))/(np.max(im2)-np.min(im2))+np.sqrt(alpha**2+beta**2))*(1-im1)
 
-# I=im2+im1*np.cos(theta)
+I=im2+im1*np.cos(theta)
 
 # for i in range(nx):
 #     for j in range(ny):
 #         if I[i,j]<np.sin(theta):
 #             I[i,j]=np.sin(theta)+0.001
-# 
-# plt.figure(10)
-# plt.imshow(im1)
-# plt.figure(11)
-# plt.imshow(im2)
-# plt.figure(12)
-# plt.imshow(I)
+
+plt.figure(10)
+plt.imshow(im1)
+plt.figure(11)
+plt.imshow(im2)
+plt.figure(12)
+plt.imshow(I)
 
 ##
 
 cond=(I < (alpha ** 2 + beta ** 2)**.5)
 
 if cond.any():
-    print("Pas possible")
+    print("Peut-être pas possible")
 else :
     print("OK")
 
 plt.figure(9)
 plt.imshow(cond)
 
-masque = np.zeros((nx,ny))
-for i in range(nx):
-    for j in range(ny):
-        if np.sqrt((nx/2-i)**2+(ny/2-j)**2)>20:
-            masque[i,j]=1
+masque = im1#np.zeros((nx,ny))
+# for i in range(nx):
+#     for j in range(ny):
+#         if np.sqrt((nx/2-i)**2+(ny/2-j)**2)>10:
+#             masque[i,j]=1
 
 plt.figure(7)
 plt.imshow(masque)
@@ -268,7 +268,7 @@ I_sim = eclairement(z,[0,0,1],np.gradient)
 fig = plt.figure(1)
 ax = fig.gca(projection='3d')
 ax.axis('equal')
-ax.plot_surface(X, Y, Z1,rstride=2,cstride=2,linewidth=1, color='r')
+ax.plot_surface(X, Y, Z1*(Z1>0),rstride=2,cstride=2,linewidth=1, color='r')
 # ax.plot_wireframe(X, Y, Z,rstride=2,cstride=2,linewidth=1)
 
 plt.figure(2)
@@ -307,15 +307,15 @@ plt.imshow(pts_crit)
 # Z_rot = rotation_Z(Z_mesh, theta)
 # Z_test2 = regularisation_maillage(Z_rot[0],Z_rot[1],Z_rot[2])
 # 
-I_test = eclairement(Z_reg,lV,np.gradient)
+# I_test = eclairement(Z_reg,lV,np.gradient)
+# 
+# plt.figure(7)
+# plt.imshow(I_test)
 
-plt.figure(7)
-plt.imshow(I_test)
-
-fig = plt.figure(17)
-ax = fig.gca(projection='3d')
-ax.axis('equal')
-ax.plot_surface(X_reg,Y_reg,z,rstride=2,cstride=2,linewidth=1, color='r')
+# fig = plt.figure(17)
+# ax = fig.gca(projection='3d')
+# ax.axis('equal')
+# ax.plot_surface(X_reg,Y_reg,z,rstride=2,cstride=2,linewidth=1, color='r')
 
 # fig = plt.figure(18)
 # ax = fig.gca(projection='3d')
