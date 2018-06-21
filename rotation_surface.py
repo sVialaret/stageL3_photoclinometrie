@@ -98,8 +98,8 @@ def regularisation_maillage(X,Y,Z):
     minMeshY = np.min(Y)
     maxMeshY = np.max(Y)
 
-    x_mesh_reg = np.linspace(minMeshX, maxMeshX, nx)
-    y_mesh_reg = np.linspace(minMeshY, maxMeshY, ny)
+    x_mesh_reg = np.linspace(minMeshY, maxMeshY, nx)
+    y_mesh_reg = np.linspace(minMeshX, maxMeshX, ny)
     X_reg,Y_reg = np.meshgrid(y_mesh_reg, x_mesh_reg)
 
     Z_reg = np.zeros((nx, ny))
@@ -108,7 +108,7 @@ def regularisation_maillage(X,Y,Z):
         for j in range(ny):
             distArray = (X_reg[i,j] - X) ** 2 + (Y_reg[i,j] - Y) ** 2
             indX, indY = np.unravel_index(np.argsort(distArray, axis=None), (nx,ny))
-            Z_reg[i,j] = np.sum(Z[indX[:4], indY[:4]]) / 4
+            Z_reg[i,j] = np.sum(Z[indX[:4], indY[:4]])/ 4
     return Z_reg
 
 im1=plt.imread("img/3/non_sym_mask.png")[:,:,0]
@@ -137,12 +137,12 @@ im2=plt.imread("img/3/non_sym.png")[:,:,0]
 
 ## Parametres du probleme
 
-# nx = 32
-# ny = 32
+# nx = 64
+# ny = 64
 
 delta=0.01
 
-theta = np.pi/5.5
+theta = np.pi/5
 phi = np.pi/2
 theta_obs = 0
 phi_obs = 0
@@ -157,7 +157,7 @@ x_mesh = np.linspace(-(nx-1)/2, (nx-1)/2, nx)
 y_mesh = np.linspace(-(ny-1)/2, (ny-1)/2, ny)
 X,Y = np.meshgrid(y_mesh,x_mesh)
 
-# Z = generer_surface(Nx=nx, Ny=ny, forme=('cone',10,5), reg=0)
+# Z = generer_surface(Nx=nx, Ny=ny, forme=('cone',30,15), reg=0)
 # Z = generer_surface(Nx=nx, Ny=ny, forme=('trap',10,20,5,10), reg = 0)
 # Z = generer_surface(Nx=nx, Ny=ny, forme=('plateau',30,30,5), reg = 0)
 
@@ -206,20 +206,20 @@ plt.imshow(cond)
 masque = im1#np.zeros((nx,ny))
 # for i in range(nx):
 #     for j in range(ny):
-#         if np.sqrt((nx/2-i)**2+(ny/2-j)**2)>10:
+#         if np.sqrt((nx/2-i)**2+(ny/2-j)**2)>30:
 #             masque[i,j]=1
 
 plt.figure(7)
 plt.imshow(masque)
 
-#Z1=deepcopy(Z)
+# Z1=deepcopy(Z)
 Z1=np.zeros((nx,ny))
 
 Z_mesh = np.array([X,Y,Z1])
 Z_rot = rotation_Z(Z_mesh, -theta)
 
-x_mesh_reg = np.linspace(np.min(Z_rot[0]), np.max(Z_rot[0]), nx)
-y_mesh_reg = np.linspace(np.min(Z_rot[1]), np.max(Z_rot[1]), ny)
+x_mesh_reg = np.linspace(np.min(Z_rot[1]), np.max(Z_rot[1]), nx)
+y_mesh_reg = np.linspace(np.min(Z_rot[0]), np.max(Z_rot[0]), ny)
 X_reg,Y_reg = np.meshgrid(y_mesh_reg, x_mesh_reg)
 
 for i in range(3):
@@ -229,12 +229,11 @@ for i in range(3):
     Z_rot = rotation_Z(Z_mesh, -theta)
     Z_reg = regularisation_maillage(Z_rot[0],Z_rot[1],Z_rot[2])
     
-    # fig = plt.figure(30)
-    # ax = fig.gca(projection='3d')
-    # ax.axis('equal')
-    # ax.plot_surface(X_reg, Y_reg, Z_reg,rstride=2,cstride=2,linewidth=1, color='r')
+    fig = plt.figure(30)
+    ax = fig.gca(projection='3d')
+    ax.axis('off')#'equal')
+    ax.plot_surface(X_reg, Y_reg, Z_reg, rstride=1, cstride=1, linewidth=0, color='#acc2d9')#,rstride=2,cstride=2,linewidth=1, color='r')
 
-    
     # Z_n_tilde
     
     Z0 = np.zeros((nx,ny))
@@ -263,13 +262,22 @@ for i in range(3):
     print(i)
     
 
-I_sim = eclairement(z,[0,0,1],np.gradient)
+I_sim = eclairement(Z1*(Z1>0),lV,np.gradient)
 
 fig = plt.figure(1)
 ax = fig.gca(projection='3d')
-ax.axis('equal')
-ax.plot_surface(X, Y, Z1*(Z1>0),rstride=2,cstride=2,linewidth=1, color='r')
-# ax.plot_wireframe(X, Y, Z,rstride=2,cstride=2,linewidth=1)
+ax.axis('off')#ax.axis('equal')
+ax.set_zlim3d(0,8)
+ax.plot_surface(X, Y, (Z1*(Z1>0)), rstride=1, cstride=1, linewidth=0, color='#acc2d9')#ax.plot_surface(X, Y, Z1*(Z1>0),rstride=2,cstride=2,linewidth=1, color='r')
+#ax.plot_wireframe(X, Y, Z, rstride=5, cstride=5, linewidth=1, color='r')
+
+# fig = plt.figure(10)
+# ax = fig.gca(projection='3d')
+# ax.axis('off')
+# ax.set_zlim3d(-10,12)
+# ax.plot_surface(Z_rot[0], Z_rot[1], Z_rot[2], rstride=1, cstride=1, linewidth=0, color='#acc2d9')
+# ax.plot_wireframe(X, Y, Z_mat, rstride=5, cstride=5, linewidth=1, color='r')
+# ax.plot_surface(X, Y, (Z_appr_mat * (Z_appr_mat >= 0))[::-1,:], rstride=1, cstride=1, linewidth=0, color='#acc2d9')
 
 plt.figure(2)
 plt.imshow(I)
@@ -312,18 +320,17 @@ plt.imshow(pts_crit)
 # plt.figure(7)
 # plt.imshow(I_test)
 
-# fig = plt.figure(17)
-# ax = fig.gca(projection='3d')
-# ax.axis('equal')
-# ax.plot_surface(X_reg,Y_reg,z,rstride=2,cstride=2,linewidth=1, color='r')
+fig = plt.figure(17)
+ax = fig.gca(projection='3d')
+ax.axis('equal')
+ax.plot_surface(X_reg,Y_reg,z,rstride=2,cstride=2,linewidth=1, color='r')
 
-# fig = plt.figure(18)
-# ax = fig.gca(projection='3d')
-# ax.axis('equal')
-# ax.plot_surface(X_reg,Y_reg,Z_test,rstride=2,cstride=2,linewidth=1, color='r')
+fig = plt.figure(18)
+ax = fig.gca(projection='3d')
+ax.axis('equal')
+ax.plot_surface(X_reg,Y_reg,z*(z>Z0_reg)+Z0_reg*(z<=Z0_reg),rstride=2,cstride=2,linewidth=1, color='r')
 
 plt.show()
 
-v=np.sum(Z1)
-print(v)
-
+#v=np.sum(Z1)
+# print(v)
