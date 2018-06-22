@@ -59,7 +59,7 @@ x = np.linspace(-nx/2,nx/2-1,nx)
 y = np.linspace(-ny/2,ny/2-1,ny)
 X,Y = np.meshgrid(y,x)
 
-Z=generer_surface(Nx=nx, Ny=ny, forme=('cone',50,50), reg = 0)
+Z=generer_surface(Nx=nx, Ny=ny, forme=('cone',20,50), reg = 0)
 #Z=generer_surface(Nx=nx, Ny=ny, forme=('trap',60,20,20,10), reg = 0)
 #Z=generer_surface(Nx=nx, Ny=ny, forme=('volcan',50,50,10,7,0.5), reg = 2)
 V=sum(sum(Z))

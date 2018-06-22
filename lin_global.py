@@ -36,7 +36,7 @@ eps = 0.1
 dx = 1
 dy = 1
 
-nb_it = 5
+nb_it = 10
 
 
 x = np.linspace(0, np.pi, nx)
@@ -137,11 +137,11 @@ V = np.sum(Z)
 # print((alpha ** 2 + beta ** 2) ** .5)
 
 
-# # print(True in (E_cp_mat < (alpha ** 2 + beta ** 2) ** .5))
+# print(True in (E_cp_mat < (alpha ** 2 + beta ** 2) ** .5))
 
 
-# E = np.reshape(E_cp_mat, N)
-# E_cp = E.copy()
+E = np.reshape(E_cp_mat, N)
+E_cp = E.copy()
 
 # io.imsave('non_sym_norm.png', E_cp_mat)
 
@@ -190,7 +190,7 @@ while compt < nb_it:
 	# plt.imshow(np.abs(E_appr_mat - E_cp_mat), cmap='gray', vmin = 0, vmax = 1)
 
 	print(comparer_eclairement(E_cp, E_appr))
-	print(np.sum(np.abs(Z - Z_appr))/np.sum(Z))
+	# print(np.sum(np.abs(Z - Z_appr))/np.sum(Z))
 	print(compt)
 
 # Z_appr_mat = mask * Z_appr_mat
@@ -199,12 +199,15 @@ while compt < nb_it:
 plt.figure(10 * compt + 2)
 plt.imshow(E_cp_mat, cmap='gray')
 
-fig = plt.figure(10 * compt)
-ax = fig.gca(projection='3d')
-ax.axis('off')
-# ax.set_zlim3d(-2,20)
-ax.plot_surface(X, Y, Z_appr_mat[::-1,:], rstride=1, cstride=1, linewidth=0, color='#acc2d9')
-ax.plot_wireframe(X, Y, Z_mat, rstride=5, cstride=5, linewidth=1, color='r')
+plt.figure(10 * compt + 3)
+plt.imshow(E_appr_mat, cmap='gray')
+
+# fig = plt.figure(10 * compt)
+# ax = fig.gca(projection='3d')
+# ax.axis('off')
+# # ax.set_zlim3d(-2,20)
+# # ax.plot_surface(X, Y, Z_appr_mat[::-1,:], rstride=1, cstride=1, linewidth=0, color='#acc2d9')
+# # ax.plot_wireframe(X, Y, Z_mat, rstride=5, cstride=5, linewidth=1, color='r')
 # ax.plot_surface(X, Y, (Z_appr_mat * (Z_appr_mat >= 0))[::-1,:], rstride=1, cstride=1, linewidth=0, color='#acc2d9')
 
-plt.show()
+# plt.show()
