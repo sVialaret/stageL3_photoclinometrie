@@ -221,16 +221,17 @@ def comp_connexes(P):
                         M.append([i,j])
             for (x,y) in M:
                 C=voisinage(R,C,x,y)
-            Q.append(C)
-               
-            for (i,j) in Q[h]:
-                R[i,j]=0
-            L=[]
-            for i in range(nx):
-                for j in range(ny):
-                    if R[i,j]==1:
-                        L.append([i,j])
-            h+=1
+        Q.append(C)
+        for i in range(nx): 
+            for j in range(ny): 
+                if Q[h][i,j]==1: 
+                    R[i,j]=0 
+        h+=1
+        L=[]
+        for i in range(nx):
+            for j in range(ny):
+                if R[i,j]==1:
+                    L.append([i,j])
     return np.array(Q)
     
 def frontiere(K):
