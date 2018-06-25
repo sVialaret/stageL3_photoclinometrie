@@ -15,6 +15,7 @@ ny = 200
 
 # nx = 128
 # ny = 128
+
 N = nx * ny
 
 theta = np.pi / 3
@@ -35,10 +36,11 @@ dy = 1
 
 nb_it = 10
 
-
 x = np.linspace(0, np.pi, nx)
 y = np.linspace(0, np.pi, ny)
 X, Y = np.meshgrid(y, x)
+
+### Matrice du probleme lineaire
 
 Dx_ii = sp.lil_matrix((ny, ny))
 Dx_ii.setdiag(-1.0 / dx)
@@ -76,6 +78,8 @@ M = M.tocsr()
 
 def grad(U): return (Dx.dot(U), Dy.dot(U))
 
+### Carte d'eclairement
+
 # Z_mat = generer_surface(Nx=nx, Ny=ny, forme=('volcan',50,50,0.5,0.2,0.5), reg = 0)
 # Z_mat = generer_surface(Nx=nx, Ny=ny, forme=('trap',30,100,1,0.5), reg=0)
 # Z_mat = generer_surface(Nx=nx, Ny=ny, forme=('cone', 50, 10), reg=0)
@@ -99,6 +103,9 @@ E_cp_mat = E_cp_mat * mask
 E_cp_mat[np.where(E_cp_mat == 0)] = 0.5
 E = np.reshape(E_cp_mat, N)
 E_cp = E.copy()
+
+
+### Resolution SFS
 
 compt = 0
 
