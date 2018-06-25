@@ -267,8 +267,10 @@ I_sim = eclairement(z,[0,0,1],np.gradient)
 
 fig = plt.figure(1)
 ax = fig.gca(projection='3d')
-ax.axis('equal')
-ax.plot_surface(X, Y, Z1*(Z1>0),rstride=2,cstride=2,linewidth=1, color='r')
+ax.axis('off')
+ax.set_zlim3d(-2,10)
+# ax.plot_surface(X, Y, Z1*(Z1>0),rstride=2,cstride=2,linewidth=1, color='r')
+ax.plot_surface(X, Y, (Z1*(Z1>=0))[::-1,:], rstride=1, cstride=1, linewidth=0, color='#acc2d9')
 # ax.plot_wireframe(X, Y, Z,rstride=2,cstride=2,linewidth=1)
 
 plt.figure(2)
@@ -327,3 +329,4 @@ plt.show()
 v=np.sum(Z1)
 print(v)
 
+print(np.max((Z1*(Z1>=0))))
