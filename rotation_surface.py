@@ -3,7 +3,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-from libSFS import *
+from libSFS import direction_eclairement, generer_surface, eclairement, points_critiques, height, comp_connexes, rearrange
 from time import clock
 from copy import deepcopy
 
@@ -93,9 +93,8 @@ def regularisation_maillage(X,Y,Z):
     maxMeshX = np.max(X)
     minMeshY = np.min(Y)
     maxMeshY = np.max(Y)
-
-    x_mesh_reg = np.linspace(minMeshY, maxMeshY, nx)
-    y_mesh_reg = np.linspace(minMeshX, maxMeshX, ny)
+    x_mesh_reg = np.linspace(minMeshX, maxMeshX, nx)
+    y_mesh_reg = np.linspace(minMeshY, maxMeshY, ny)
     X_reg,Y_reg = np.meshgrid(y_mesh_reg, x_mesh_reg)
 
     Z_reg = np.zeros((nx, ny))
@@ -109,11 +108,10 @@ def regularisation_maillage(X,Y,Z):
 
 ## Parametres du probleme
 
-nx = 64
-ny = 64
+# nx = 32
+# ny = 32
 
 delta=0.01
-
 theta = np.pi/10
 phi = np.pi/2
 theta_obs = 0
@@ -168,14 +166,11 @@ X_reg,Y_reg = np.meshgrid(y_mesh_reg, x_mesh_reg)
 
 for i in range(6):
     
-    # Z1  ->  Z_n
-    
+    # Z1  ->  Z_n    
     Z_mesh = np.array([X,Y,Z1])
     Z_rot = rotation_Z(Z_mesh, -theta)
     Z_reg = regularisation_maillage(Z_rot[0],Z_rot[1],Z_rot[2])
-
     # Z_reg  ->  Z_n_tilde
-    
     Z0 = np.zeros((nx,ny))
     
     Z0_mesh = np.array([X,Y,Z0])
@@ -187,8 +182,9 @@ for i in range(6):
     I_rot_reg = regularisation_maillage(Z_rot[0],Z_rot[1],I)
     
     z = FMM(I_rot_reg,Z0_reg,dx_rot,dy,masque_rot_reg)
-    
+
     # z  ->  Z_n+1_tilde
+
     
     Z_mesh = np.array([X_reg,Y_reg,z])
     Z_rot = rotation_Z(Z_mesh, theta)

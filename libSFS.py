@@ -8,6 +8,9 @@ import scipy.sparse as sp
 
 
 def direction_eclairement(angLum, angObs):
+    """
+        renvoie les coordonnees cartesiennes du vecteur eclairement, repere par angLum, relativement a l'observateur repere par angObs
+    """
 
     thL, phiL = angLum
     thO, phiO = angObs
@@ -52,7 +55,6 @@ def generer_surface(Nx=64, Ny=64, forme=('plateau', 16, 16, 1), reg=0):
         T = (np.abs(X) < sigx) * (np.abs(Y) < sigy)
         if 2 * sigx > Nx or 2 * sigy > Ny:
             raise ValueError('Surface trop large')
-        # Z = H*np.exp(-(1/(sigx**2-X**2))-(1/(sigy**2-Y**2)))*T
         Z[Nx // 2 - sigx + 1:Nx // 2 + sigx - 1, Ny // 2 - sigy + 1:Ny // 2 + sigy - 1] = H * np.exp(-(1 / (sigx**2 - X[Nx // 2 - sigx + 1:Nx // 2 + sigx - 1, Ny // 2 - sigy + 1:Ny // 2 + sigy - 1]**2)) - (
             1 / (sigy**2 - Y[Nx // 2 - sigx + 1:Nx // 2 + sigx - 1, Ny // 2 - sigy + 1:Ny // 2 + sigy - 1]**2)))
 
@@ -96,7 +98,6 @@ def generer_surface(Nx=64, Ny=64, forme=('plateau', 16, 16, 1), reg=0):
         Tk = (np.abs(X) < k * sigx) * (np.abs(Y) < k * sigy)
         if 2 * sigx > Nx or 2 * sigy > Ny:
             raise ValueError('Surface trop large')
-        # Z = H*np.exp(-(1/(sigx**2-X**2))-(1/(sigy**2-Y**2)))*T
 
         Z[Nx // 2 - sigx + 1:Nx // 2 + sigx - 1, Ny // 2 - sigy + 1:Ny // 2 + sigy - 1] = H * np.exp(-(1 / (sigx**2 - X[Nx // 2 - sigx + 1:Nx // 2 + sigx - 1, Ny // 2 - sigy + 1:Ny // 2 + sigy - 1]**2)) - (
             1 / (sigy**2 - Y[Nx // 2 - sigx + 1:Nx // 2 + sigx - 1, Ny // 2 - sigy + 1:Ny // 2 + sigy - 1]**2)))
@@ -104,7 +105,6 @@ def generer_surface(Nx=64, Ny=64, forme=('plateau', 16, 16, 1), reg=0):
         Z_trou[Nx // 2 - int(k * sigx) + 1:Nx // 2 + int(k * sigx) - 1, Ny // 2 - int(k * sigy) + 1:Ny // 2 + int(k * sigy) - 1] = p * np.exp(-(1 / (int(k * sigx)**2 - X[Nx // 2 - int(k * sigx) + 1:Nx // 2 + int(k * sigx) - 1, Ny // 2 - int(k * sigy) + 1:Ny // 2 + int(k * sigy) - 1]**2)) - (
             1 / (int(k * sigy)**2 - Y[Nx // 2 - int(k * sigx) + 1:Nx // 2 + int(k * sigx) - 1, Ny // 2 - int(k * sigy) + 1:Ny // 2 + int(k * sigy) - 1]**2)))
 
-        # Z_trou = p*np.exp(-(1/((k*sigx)**2-X**2))-(1/((k*sigy)**2-Y**2)))*Tk
         Z = Z - Z_trou
 
     # Regularisation eventuelle
@@ -164,20 +164,17 @@ def bruit_selpoivre(I, freq):
     I[indexS] = 1
     return I
 
-# def simul_camera(I, (nx, ny), patch):
-#     
-#     I_mat = np.reshape(I, (nx, ny))
-# 
-#     for i in range(nx // patch):
-#         for j in range(ny // patch):
-#             m = np.sum(I_mat[patch*i:patch*(i+1), patch*j:patch*(j+1)]) / (patch **2)
-#             # print(I_mat[patch*i:patch*(i+1), patch*j:patch*(j+1)])
-#             # print(patch**2)
-#             # print(m)
-#             for k in range(patch):
-#                 for l in range(patch):
-#                     I_mat[patch * i + k, patch*j + l] = m
-#     return np.reshape(I_mat, nx*ny)
+def simul_camera(I, (nx, ny), patch):
+    
+    I_mat = np.reshape(I, (nx, ny))
+
+    for i in range(nx // patch):
+        for j in range(ny // patch):
+            m = np.sum(I_mat[patch*i:patch*(i+1), patch*j:patch*(j+1)]) / (patch **2)
+            for k in range(patch):
+                for l in range(patch):
+                    I_mat[patch * i + k, patch*j + l] = m
+    return np.reshape(I_mat, nx*ny)
 
     
 def points_critiques(E):

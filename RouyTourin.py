@@ -151,7 +151,8 @@ z0[nx-1,:]=CB[3]
 
 # 1ère étape
 
-# z=FMM(I,z0,dx,dy)
+z=FMM(I,z0,dx,dy)
+
         
 REG=reg(z)
 print(REG)
